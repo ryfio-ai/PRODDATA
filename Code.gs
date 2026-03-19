@@ -148,14 +148,33 @@ function getOrCreateSheet(ss, name, headers) {
   if (!sheet) {
     sheet = ss.insertSheet(name);
     sheet.appendRow(headers);
-    sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#f3f3f3");
+    sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#f8f9fa").setBorder(true, true, true, true, true, true);
     sheet.setFrozenRows(1);
   } else if (sheet.getLastRow() === 0) {
     sheet.appendRow(headers);
-    sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#f3f3f3");
+    sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold").setBackground("#f8f9fa").setBorder(true, true, true, true, true, true);
     sheet.setFrozenRows(1);
   }
   return sheet;
+}
+
+function getOrCreateStudentFolder(fullName) {
+  const rootName = "Student Portal Uploads";
+  let root = DriveApp.getFoldersByName(rootName).hasNext() ? DriveApp.getFoldersByName(rootName).next() : DriveApp.createFolder(rootName);
+  return root.getFoldersByName(fullName).hasNext() ? root.getFoldersByName(fullName).next() : root.createFolder(fullName);
+}
+
+function saveToDrive(fileObj, folder) {
+  try {
+    const contentType = fileObj.base64.substring(5, fileObj.base64.indexOf(';'));
+    const bytes = Utilities.base64Decode(fileObj.base64.split(',')[1]);
+    const blob = Utilities.newBlob(bytes, contentType, fileObj.name);
+    const file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    return file.getUrl();
+  } catch (e) {
+    return "Error saving: " + e.message;
+  }
 }
 
 function doPost(e) {
@@ -175,7 +194,9 @@ function doPost(e) {
     if (data.activities && data.activities.length > 0) {
       const headers = ["Timestamp", "Roll Number", "Name", "Category", "Title", "Date/Period", "Details", "Proof Files"];
       const sheet = getOrCreateSheet(ss, SHEET_ACTIVITIES, headers);
+      const studentFolder = getOrCreateStudentFolder(`${student.rollNo}_${student.name}`);
       let isFirstActivity = true;
+      
       data.activities.forEach(act => {
         let details = "";
         if (act.category === "Course Completed") details = `Cert No: ${act.certificateNo || "N/A"}`;
@@ -184,7 +205,11 @@ function doPost(e) {
 
         let datePeriod = act.date || "N/A";
         if (act.startDate && act.endDate) datePeriod = `${act.startDate} to ${act.endDate}`;
-        else if (act.startDate) datePeriod = `Starts: ${act.startDate}`;
+        
+        let fileUrls = [];
+        if (act.files && act.files.length > 0) {
+          fileUrls = act.files.map(f => saveToDrive(f, studentFolder));
+        }
 
         sheet.appendRow([
           timestamp,
@@ -194,7 +219,7 @@ function doPost(e) {
           act.eventName || act.awardName || act.courseName || act.companyName || "N/A",
           datePeriod,
           details,
-          act.files ? act.files.map(f => f.name).join(", ") : ""
+          fileUrls.join("\n")
         ]);
         isFirstActivity = false;
       });

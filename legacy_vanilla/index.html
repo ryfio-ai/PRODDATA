@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PSG Tech | Student Activity Portal</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <h1>PSG Tech</h1>
+                <p>Student Comprehensive Portal</p>
+            </div>
+            <nav class="form-tabs">
+                <button type="button" class="tab-btn active" data-tab="activities">Activity Records</button>
+                <button type="button" class="tab-btn" data-tab="academic">Academic Grades</button>
+            </nav>
+        </header>
+
+        <main>
+            <form id="mainForm" class="card">
+                <!-- Student Info (Always Visible) -->
+                <section class="form-section">
+                    <h2>Student Information</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="studentSelect">Roll Number & Name</label>
+                            <select id="studentSelect" required>
+                                <option value="" disabled selected>Select your Roll Number</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="studentEmail">Email ID</label>
+                            <input type="email" id="studentEmail" readonly placeholder="Auto-generated email">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Activities Tab Content -->
+                <div id="activitiesTab" class="tab-content">
+                    <section class="form-section">
+                        <div class="section-header">
+                            <h2>Activities / Achievements</h2>
+                            <button type="button" id="addActivityBtn" class="secondary-btn">+ Add Activity</button>
+                        </div>
+                        <div id="activitiesContainer">
+                            <!-- Activity blocks will be added here -->
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Academic Grades Tab Content -->
+                <div id="academicTab" class="tab-content hidden">
+                    <section class="form-section">
+                        <div class="section-header">
+                            <h2>Academic Grade Entry</h2>
+                            <div class="semester-nav">
+                                <button type="button" id="prevSemBtn" class="nav-btn small" disabled>← Prev</button>
+                                <span class="current-sem-label">Semester <span id="currentSemNum">1</span></span>
+                                <button type="button" id="nextSemBtn" class="nav-btn small">Next →</button>
+                            </div>
+                        </div>
+
+                        <div id="gradesContainer">
+                            <table class="grades-table">
+                                <thead>
+                                    <tr>
+                                        <th>Course Code</th>
+                                        <th>Course Title</th>
+                                        <th>Credits</th>
+                                        <th>Grade</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="subjectsTableBody">
+                                    <!-- Dynamic subjects -->
+                                </tbody>
+                            </table>
+                            <div class="gpa-display">
+                                <div class="gpa-box">Semester GPA: <span id="semGPA">0.00</span></div>
+                                <div class="gpa-box">Overall CGPA: <span id="overallCGPA">0.00</span></div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="form-footer">
+                    <button type="submit" id="submitBtn">Submit All Records</button>
+                </div>
+            </form>
+
+            <div id="successOverlay" class="overlay hidden">
+                <div class="success-card">
+                    <div class="success-icon">✓</div>
+                    <h2>Submission Successful!</h2>
+                    <p>Your activity record has been logged in Google Sheets and Drive.</p>
+                    <button onclick="location.reload()">Submit Another</button>
+                </div>
+            </div>
+
+            <div id="loadingOverlay" class="overlay hidden">
+                <div class="loader-content">
+                    <div class="spinner"></div>
+                    <p>Uploading record... Please wait.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="subjects.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

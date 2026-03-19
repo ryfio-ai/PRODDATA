@@ -158,10 +158,17 @@ function getOrCreateSheet(ss, name, headers) {
   return sheet;
 }
 
-function getOrCreateStudentFolder(fullName) {
-  const rootName = "Student Portal Uploads";
-  let root = DriveApp.getFoldersByName(rootName).hasNext() ? DriveApp.getFoldersByName(rootName).next() : DriveApp.createFolder(rootName);
-  return root.getFoldersByName(fullName).hasNext() ? root.getFoldersByName(fullName).next() : root.createFolder(fullName);
+function getFolderByPath(pathArray) {
+  let currentFolder = DriveApp.getRootFolder();
+  for (let folderName of pathArray) {
+    let folders = currentFolder.getFoldersByName(folderName);
+    if (folders.hasNext()) {
+      currentFolder = folders.next();
+    } else {
+      currentFolder = currentFolder.createFolder(folderName);
+    }
+  }
+  return currentFolder;
 }
 
 function saveToDrive(fileObj, folder) {
@@ -192,9 +199,8 @@ function doPost(e) {
     const timestamp = new Date();
 
     if (data.activities && data.activities.length > 0) {
-      const headers = ["Timestamp", "Roll Number", "Name", "Category", "Title", "Date/Period", "Details", "Proof Files"];
+      const headers = ["Timestamp", "Roll Number", "Name", "Semester", "Category", "Title", "Date/Period", "Details", "Proof Files"];
       const sheet = getOrCreateSheet(ss, SHEET_ACTIVITIES, headers);
-      const studentFolder = getOrCreateStudentFolder(`${student.rollNo}_${student.name}`);
       let isFirstActivity = true;
       
       data.activities.forEach(act => {
@@ -206,15 +212,20 @@ function doPost(e) {
         let datePeriod = act.date || "N/A";
         if (act.startDate && act.endDate) datePeriod = `${act.startDate} to ${act.endDate}`;
         
+        // Dynamic Folder Path: /PSGTech/RollNo_Name/Semester X/Category/
+        const folderPath = ["PSGTech", `${student.rollNo}_${student.name}`, `Semester ${act.semester || "Unknown"}`, act.category || "General"];
+        const targetFolder = getFolderByPath(folderPath);
+
         let fileUrls = [];
         if (act.files && act.files.length > 0) {
-          fileUrls = act.files.map(f => saveToDrive(f, studentFolder));
+          fileUrls = act.files.map(f => saveToDrive(f, targetFolder));
         }
 
         sheet.appendRow([
           timestamp,
           isFirstActivity ? student.rollNo : "",
           isFirstActivity ? student.name : "",
+          act.semester || "",
           act.category,
           act.eventName || act.awardName || act.courseName || act.companyName || "N/A",
           datePeriod,

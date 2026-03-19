@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import { SUBJECTS_DATA, GRADE_POINTS, STUDENTS } from './constants/subjects'
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKEn5V1R1MKyuH_Q76Ae_a3-1PX1WvFnt_35Azi4JOlCNfAEYuX605rHG1NIyzrumB/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw3cKU8EtCbnJLuVV1pq89GCnDEFu8Eg-SRwyQDsE8zyYRelNh1fN_7aXMu3xlp5B4/exec";
 
 function App() {
   const [step, setStep] = useState(1); // 1: Info, 2: Academic, 3: Activities, 4: Review
   const [student, setStudent] = useState({ rollNo: '', name: '', email: '' });
-  const [activities, setActivities] = useState([{ id: Date.now(), category: '', files: [] }]);
+  const [activities, setActivities] = useState([{ id: Date.now(), category: '', semester: 1, files: [] }]);
   const [academicData, setAcademicData] = useState({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -120,7 +120,7 @@ function App() {
   };
 
   // Activity Logic
-  const addActivity = () => setActivities([...activities, { id: Date.now(), category: '', files: [] }]);
+  const addActivity = () => setActivities([...activities, { id: Date.now(), category: '', semester: 1, files: [] }]);
   const updateActivity = (id, field, value) => setActivities(activities.map(a => a.id === id ? { ...a, [field]: value } : a));
   const removeActivity = (id) => setActivities(activities.filter(a => a.id !== id));
 
@@ -246,6 +246,12 @@ function App() {
                       <option value="Sports Participation / Achievement">Sports Participation / Achievement</option>
                       <option value="In-Plant Training">In-Plant Training</option>
                       <option value="Internship">Internship</option>
+                    </select>
+                  </div>
+                  <div className="form-group" style={{ marginBottom: '15px' }}>
+                    <label>Activity Semester</label>
+                    <select value={act.semester} onChange={(e) => updateActivity(act.id, 'semester', parseInt(e.target.value))}>
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <option key={s} value={s}>Semester {s}</option>)}
                     </select>
                   </div>
                   <DynamicFields activity={act} update={(f, v) => updateActivity(act.id, f, v)} handleFile={(f) => handleFileUpload(act.id, f)} />

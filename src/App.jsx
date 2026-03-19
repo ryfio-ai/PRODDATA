@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import { SUBJECTS_DATA, GRADE_POINTS, STUDENTS } from './constants/subjects'
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxeiciaazyu4tzwUIWQS6if4d3J4OE59ywC6IYDyS_r0UOi7EnzhyUlyY8QbGtiuEId/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyKgBCC3vJEy9UqYR-mydVJTiybCVr7qc0rDwHWt0-a15wokU90eL3j4hxTMIecIMgN/exec";
 
 function App() {
   const [step, setStep] = useState(1); // 1: Info, 2: Academic, 3: Activities, 4: Review

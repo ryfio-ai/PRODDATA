@@ -1,5 +1,13 @@
+const SHEET_VISITS_ABROAD = "Visits_Abroad";
 const SHEET_ACTIVITIES = "Activities";
-const SHEET_GRADES = "Grades";
+const SHEET_AWARDS = "Awards";
+const SHEET_COMPETITIVE_EXAMS = "Competitive_Exams";
+const SHEET_INDUSTRIAL_VISITS = "Industrial_Visits";
+const SHEET_TRAININGS = "Trainings";
+
+// Target storage (explicit IDs so data goes to the right places)
+const TARGET_SPREADSHEET_ID = "1XoPGKBUMrhIxXxUK028K0BtsT4YFL3TKu3JesrkHbJU";
+const ROOT_DRIVE_FOLDER_ID = "1A1Fxof5ZGjihyuR2G8SPEDrQitplo2L6";
 
 function onOpen() {
   SpreadsheetApp.getUi()
@@ -159,7 +167,7 @@ function getOrCreateSheet(ss, name, headers) {
 }
 
 function getFolderByPath(pathArray) {
-  let currentFolder = DriveApp.getRootFolder();
+  let currentFolder = DriveApp.getFolderById(ROOT_DRIVE_FOLDER_ID);
   for (let folderName of pathArray) {
     let folders = currentFolder.getFoldersByName(folderName);
     if (folders.hasNext()) {
@@ -171,17 +179,66 @@ function getFolderByPath(pathArray) {
   return currentFolder;
 }
 
+function safeFolderName(name) {
+  const s = String(name || "").trim();
+  if (!s) return "Untitled";
+  // Remove characters that commonly break Drive folder paths
+  return s.replace(/[\/\\:*?"<>|#%\u0000-\u001F]/g, " ").replace(/\s+/g, " ").trim().slice(0, 120);
+}
+
+function ensureAnyoneWithLinkView(fileOrFolder) {
+  try {
+    fileOrFolder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (e) {
+    // Ignore if sharing fails due to domain policy
+  }
+}
+
 function saveToDrive(fileObj, folder) {
   try {
     const contentType = fileObj.base64.substring(5, fileObj.base64.indexOf(';'));
     const bytes = Utilities.base64Decode(fileObj.base64.split(',')[1]);
     const blob = Utilities.newBlob(bytes, contentType, fileObj.name);
     const file = folder.createFile(blob);
-    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    ensureAnyoneWithLinkView(file);
     return file.getUrl();
   } catch (e) {
     return "Error saving: " + e.message;
   }
+}
+
+function normalizeSemesterFolder(semesterValue) {
+  const s = String(semesterValue || "").trim();
+  return safeFolderName(s || "Semester NA");
+}
+
+function createEntryFolder(student, semesterFolder, sectionName, entryLabel) {
+  const base = [
+    `${safeFolderName(student.rollNo)}_${safeFolderName(student.name)}`,
+    normalizeSemesterFolder(semesterFolder),
+    safeFolderName(sectionName),
+    safeFolderName(entryLabel)
+  ];
+  const folder = getFolderByPath(base);
+  ensureAnyoneWithLinkView(folder);
+  return folder;
+}
+
+function writeSection(ss, sheetName, headers, student, timestamp, entries, rowBuilder, sectionFolderName, entryTitleBuilder, semesterFolderBuilder) {
+  if (!entries || entries.length === 0) return;
+  const sheet = getOrCreateSheet(ss, sheetName, headers);
+  entries.forEach((entry) => {
+    const entryTitle = entryTitleBuilder(entry) || Utilities.formatDate(timestamp, Session.getScriptTimeZone(), "yyyy-MM-dd_HHmmss");
+    const semesterFolder = semesterFolderBuilder ? semesterFolderBuilder(entry) : "Semester NA";
+    const entryFolder = createEntryFolder(student, semesterFolder, sectionFolderName, entryTitle);
+
+    let proofLink = "";
+    if (entry.files && entry.files.length > 0) {
+      entry.files.forEach((f) => saveToDrive(f, entryFolder));
+      proofLink = entryFolder.getUrl();
+    }
+    sheet.appendRow(rowBuilder(entry, proofLink));
+  });
 }
 
 function doPost(e) {
@@ -194,78 +251,151 @@ function doPost(e) {
     }
     
     // Spreadsheet logic
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = SpreadsheetApp.openById(TARGET_SPREADSHEET_ID);
     const student = data.student;
     const timestamp = new Date();
 
-    if (data.activities && data.activities.length > 0) {
-      const headers = ["Timestamp", "Roll Number", "Name", "Semester", "Category", "Title", "Date/Period", "Details", "Proof Files"];
-      const sheet = getOrCreateSheet(ss, SHEET_ACTIVITIES, headers);
-      let isFirstActivity = true;
-      
-      data.activities.forEach(act => {
-        let details = "";
-        if (act.category === "Course Completed") details = `Cert No: ${act.certificateNo || "N/A"}`;
-        else if (act.category === "Sports Participation / Achievement") details = `Place: ${act.place || "N/A"}, Level: ${act.level || "N/A"}, Cat: ${act.sportCategory || "N/A"}`;
-        else if (act.category === "In-Plant Training" || act.category === "Internship") details = `Location: ${act.location || "N/A"}`;
+    // Sheet 1: Visits_Abroad
+    writeSection(
+      ss,
+      SHEET_VISITS_ABROAD,
+      ["Timestamp", "Roll No", "Name", "Place of Visit", "Period From", "Period To", "Purpose", "Proof Link"],
+      student,
+      timestamp,
+      data.visitsAbroad || [],
+      (entry, proofLink) => [
+        timestamp,
+        student.rollNo,
+        student.name,
+        entry.place || "",
+        entry.periodFrom || "",
+        entry.periodTo || "",
+        entry.purpose || "",
+        proofLink
+      ],
+      "Visits Abroad",
+      (entry) => `${entry.place || "Visit"} - ${entry.periodFrom || ""}`.trim(),
+      () => "Semester NA"
+    );
 
-        let datePeriod = act.date || "N/A";
-        if (act.startDate && act.endDate) datePeriod = `${act.startDate} to ${act.endDate}`;
-        
-        // Dynamic Folder Path: /PSGTech/RollNo_Name/Semester X/Category/
-        const folderPath = ["PSGTech", `${student.rollNo}_${student.name}`, `Semester ${act.semester || "Unknown"}`, act.category || "General"];
-        const targetFolder = getFolderByPath(folderPath);
+    // Sheet 2: Activities (with Semester enhancement)
+    writeSection(
+      ss,
+      SHEET_ACTIVITIES,
+      ["Timestamp", "Roll No", "Name", "Semester", "Nature of Activity", "Date", "Award/Achievement", "Proof Link"],
+      student,
+      timestamp,
+      data.activities || [],
+      (entry, proofLink) => [
+        timestamp,
+        student.rollNo,
+        student.name,
+        entry.semester || "",
+        entry.nature || "",
+        entry.date || "",
+        entry.award || "",
+        proofLink
+      ],
+      "Activities",
+      (entry) => `${entry.nature || "Activity"} - ${entry.date || ""}`.trim(),
+      (entry) => entry.semester || "Semester NA"
+    );
 
-        let fileUrls = [];
-        if (act.files && act.files.length > 0) {
-          fileUrls = act.files.map(f => saveToDrive(f, targetFolder));
-        }
+    // Sheet 3: Awards (with Semester enhancement)
+    writeSection(
+      ss,
+      SHEET_AWARDS,
+      ["Timestamp", "Roll No", "Name", "Semester", "Event", "Award/Position", "Awarded By", "Date", "Proof Link"],
+      student,
+      timestamp,
+      data.awards || [],
+      (entry, proofLink) => [
+        timestamp,
+        student.rollNo,
+        student.name,
+        entry.semester || "",
+        entry.event || "",
+        entry.position || "",
+        entry.awardedBy || "",
+        entry.date || "",
+        proofLink
+      ],
+      "Awards",
+      (entry) => `${entry.event || "Award"} - ${entry.date || ""}`.trim(),
+      (entry) => entry.semester || "Semester NA"
+    );
 
-        sheet.appendRow([
-          timestamp,
-          isFirstActivity ? student.rollNo : "",
-          isFirstActivity ? student.name : "",
-          act.semester || "",
-          act.category,
-          act.eventName || act.awardName || act.courseName || act.companyName || "N/A",
-          datePeriod,
-          details,
-          fileUrls.join("\n")
-        ]);
-        isFirstActivity = false;
-      });
-    }
+    // Sheet 4: Competitive_Exams
+    writeSection(
+      ss,
+      SHEET_COMPETITIVE_EXAMS,
+      ["Timestamp", "Roll No", "Name", "Exam", "Appeared", "Qualified", "Score", "Proof Link"],
+      student,
+      timestamp,
+      data.competitiveExams || [],
+      (entry, proofLink) => [
+        timestamp,
+        student.rollNo,
+        student.name,
+        entry.exam || "",
+        entry.appeared || "",
+        entry.qualified || "",
+        entry.score || "",
+        proofLink
+      ],
+      "Competitive Exams",
+      (entry) => `${entry.exam || "Exam"}`.trim(),
+      () => "Semester NA"
+    );
 
-    if (data.academic) {
-      const headers = ["Timestamp", "Roll Number", "Name", "Semester", "Course Code", "Course Title", "Credits", "Grade", "GPA", "CGPA"];
-      const sheet = getOrCreateSheet(ss, SHEET_GRADES, headers);
-      let isFirstOverall = true;
-      
-      Object.keys(data.academic).sort((a, b) => parseInt(a) - parseInt(b)).forEach(sem => {
-        let isFirstInSem = true;
-        const semData = data.academic[sem];
-        if (!semData.subjects || semData.subjects.length === 0) return;
+    // Sheet 5: Industrial_Visits
+    writeSection(
+      ss,
+      SHEET_INDUSTRIAL_VISITS,
+      ["Timestamp", "Roll No", "Name", "Company", "Period From", "Period To", "Area", "No. of Students", "Proof Link"],
+      student,
+      timestamp,
+      data.industrialVisits || [],
+      (entry, proofLink) => [
+        timestamp,
+        student.rollNo,
+        student.name,
+        entry.company || "",
+        entry.periodFrom || "",
+        entry.periodTo || "",
+        entry.area || "",
+        entry.noOfStudents || "",
+        proofLink
+      ],
+      "Industrial Visit",
+      (entry) => `${entry.company || "Industrial Visit"} - ${entry.periodFrom || ""}`.trim(),
+      () => "Semester NA"
+    );
 
-        semData.subjects.forEach(sub => {
-          if (!sub.grade && sub.grade !== 0 && sub.grade !== "0") return;
-          const row = [
-            timestamp,
-            isFirstOverall ? student.rollNo : "",
-            isFirstOverall ? student.name : "",
-            isFirstInSem ? sem : "",
-            sub.code,
-            sub.title,
-            sub.credits,
-            sub.grade,
-            isFirstInSem ? semData.gpa : "",
-            isFirstInSem ? semData.cgpa : ""
-          ];
-          sheet.appendRow(row);
-          isFirstOverall = false;
-          isFirstInSem = false;
-        });
-      });
-    }
+    // Sheet 6: Trainings (with Semester enhancement)
+    writeSection(
+      ss,
+      SHEET_TRAININGS,
+      ["Timestamp", "Roll No", "Name", "Semester", "Company", "Period From", "Period To", "Area/Project Title", "Proof Link"],
+      student,
+      timestamp,
+      data.trainings || [],
+      (entry, proofLink) => [
+        timestamp,
+        student.rollNo,
+        student.name,
+        entry.semester || "",
+        entry.company || "",
+        entry.periodFrom || "",
+        entry.periodTo || "",
+        entry.areaOrTitle || "",
+        proofLink
+      ],
+      "Training/Internship",
+      (entry) => `${entry.company || "Training"} - ${entry.periodFrom || ""}`.trim(),
+      (entry) => entry.semester || "Semester NA"
+    );
+
     return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({ success: false, error: err.message })).setMimeType(ContentService.MimeType.JSON);

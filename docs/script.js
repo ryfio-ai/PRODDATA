@@ -594,7 +594,9 @@ function escapeHtml(str) {
 }
 
 function cssEscape(str) {
-    // minimal escape for IDs used in querySelector
-    return String(str).replaceAll(/([ #;?%&,.+*~\':\"!^$[\\]()=>|\\/@])/g, '\\\\$1');
+    // Prefer standards-based escaping when available
+    if (window.CSS && typeof window.CSS.escape === 'function') return window.CSS.escape(String(str));
+    // Fallback: minimal escape for IDs used in querySelector
+    return String(str).replace(/([ #;?%&,.+*~\':"!^$[\]()=>|\/@])/g, '\\$1');
 }
 

@@ -21,8 +21,14 @@ function doGet(e) {
 
 function doPost(e) {
   try {
-    const data = JSON.parse(e.postData.contents);
+    const rawContent = e.postData.contents;
+    const data = JSON.parse(rawContent);
     const ss = SpreadsheetApp.openById(TARGET_SPREADSHEET_ID);
+    
+    // Debug Logging
+    const logSheet = getOrCreateSheet(ss, "SystemLogs", ["Timestamp", "Raw Payload"]);
+    logSheet.appendRow([new Date(), rawContent]);
+
     const student = data.student;
     const timestamp = new Date();
 

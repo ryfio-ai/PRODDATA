@@ -311,9 +311,27 @@ function initFormSubmission() {
         loader.classList.remove('hidden');
         try {
             const payload = await collectAllData();
-            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
-            setTimeout(() => { loader.classList.add('hidden'); document.getElementById('successOverlay').classList.remove('hidden'); }, 1500);
-        } catch (err) { alert("Submission failed"); loader.classList.add('hidden'); }
+            console.log("Submitting Payload:", payload);
+            
+            // Using a standard POST. If CORS is blocked, it will still try as 'no-cors'
+            const response = await fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                body: JSON.stringify(payload)
+            }).catch(err => {
+                console.warn("Retrying with no-cors due to potential CORS block...");
+                return fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
+            });
+
+            console.log("Server Response Received");
+            setTimeout(() => { 
+                loader.classList.add('hidden'); 
+                document.getElementById('successOverlay').classList.remove('hidden'); 
+            }, 1500);
+        } catch (err) { 
+            console.error("Submission error:", err);
+            alert("Submission failed. Check console for details."); 
+            loader.classList.add('hidden'); 
+        }
     });
 }
 

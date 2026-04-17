@@ -23,7 +23,7 @@ const students = [
     "23P437 - RANJITH KUMAR K", "23P438 - AHAMED YASHICK M", "23P439 - KARTHIK A S"
 ];
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzNDvixsCL-rpigxmW5TuzH93MrmsMQd2Irtx4gMwEO0do5x_hdXku7lxAS8IKMmLHS/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzrOyv1OfW-aJUN44JwkCoYGql2_OoT9bCbe-HO-v5CXZjBn2TgpfnS3KfiuvBeGS2Y/exec";
 
 const ACTIVITY_TYPES = [
     "NCC", "General Quiz", "Marketing", "Engineering Quiz", "How Stuffs Works", 

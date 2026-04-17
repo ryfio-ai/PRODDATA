@@ -214,13 +214,10 @@ function renderAwardBlock(id) {
     return `
         ${renderSemesterDropdown(id, 'awSem')}
         <div class="form-row">
-            <div class="form-group"><label>Competition / Symposium Name</label><input type="text" id="awEvent-${id}" required></div>
             <div class="form-group"><label>Award/Position</label><input type="text" id="awPos-${id}" required></div>
-        </div>
-        <div class="form-row">
             <div class="form-group"><label>Awarded By</label><input type="text" id="awBy-${id}" required placeholder="Institution Name"></div>
-            <div class="form-group"><label>Date</label><input type="date" id="awDate-${id}" required></div>
-        </div>`;
+        </div>
+        <div class="form-group"><label>Date</label><input type="date" id="awDate-${id}" required></div>`;
 }
 
 // 4. Exams
@@ -329,7 +326,7 @@ async function collectAllData() {
         student: { rollNo, name, email },
         visitsAbroad: await collectSection('visitsAbroad', id => ({ place: val(`vaPlace-${id}`), from: val(`vaFrom-${id}`), to: val(`vaTo-${id}`), purpose: val(`vaPurpose-${id}`) })),
         activities: await collectSection('activities', id => ({ semester: val(`actSem-${id}`), nature: val(`actType-${id}`) === 'Other' ? val(`actTypeOther-${id}`) : val(`actType-${id}`), date: val(`actDate-${id}`), award: val(`actAward-${id}`) })),
-        awards: await collectSection('awards', id => ({ semester: val(`awSem-${id}`), event: val(`awEvent-${id}`), pos: val(`awPos-${id}`), by: val(`awBy-${id}`), date: val(`awDate-${id}`) })),
+        awards: await collectSection('awards', id => ({ semester: val(`awSem-${id}`), pos: val(`awPos-${id}`), by: val(`awBy-${id}`), date: val(`awDate-${id}`) })),
         exams: await collectSection('exams', id => ({ name: val(`exName-${id}`) === 'Other' ? val(`exNameOther-${id}`) : val(`exName-${id}`), score: val(`exScore-${id}`), appeared: val(`exApp-${id}`), qualified: val(`exQual-${id}`) })),
         officialInternships: await collectSection('officialInternships', id => ({ semester: val(`intSem-${id}`), company: val(`intComp-${id}`), from: val(`intFrom-${id}`), to: val(`intTo-${id}`), project: val(`intProj-${id}`) })),
         personalInternships: await collectSection('personalInternships', id => ({ semester: val(`intSem-${id}`), company: val(`intComp-${id}`), from: val(`intFrom-${id}`), to: val(`intTo-${id}`), project: val(`intProj-${id}`) })),

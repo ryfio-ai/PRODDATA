@@ -155,7 +155,7 @@ function addEntryBlock(sectionKey, container, renderFn) {
 function renderProofUpload(id) {
     return `
         <div class="form-group file-upload-group">
-            <label>Proof Upload (Max 5MB)</label>
+            <label>Offer Letter / Certificate (Max 5MB)</label>
             <div class="file-drop-area">
                 <input type="file" class="file-input" multiple accept=".pdf,.jpg,.jpeg,.png">
                 <span class="file-msg">Choose files or drag here</span>
@@ -214,7 +214,7 @@ function renderAwardBlock(id) {
     return `
         ${renderSemesterDropdown(id, 'awSem')}
         <div class="form-row">
-            <div class="form-group"><label>Event Name</label><input type="text" id="awEvent-${id}" required></div>
+            <div class="form-group"><label>Competition / Symposium Name</label><input type="text" id="awEvent-${id}" required></div>
             <div class="form-group"><label>Award/Position</label><input type="text" id="awPos-${id}" required></div>
         </div>
         <div class="form-row">
@@ -281,10 +281,9 @@ function renderPublishedPaperBlock(id) {
     return `
         ${renderSemesterDropdown(id, 'ppSem')}
         <div class="form-row">
-            <div class="form-group"><label>Author Name</label><input type="text" data-prefill="name" readonly></div>
             <div class="form-group"><label>Guide Name</label><input type="text" id="ppGuide-${id}" required></div>
+            <div class="form-group"><label>Title of Paper</label><input type="text" id="ppTitle-${id}" required></div>
         </div>
-        <div class="form-group"><label>Title of Paper</label><input type="text" id="ppTitle-${id}" required></div>
         <div class="form-row">
             <div class="form-group"><label>Journal / Conference Name</label><input type="text" id="ppConf-${id}" required></div>
             <div class="form-group">

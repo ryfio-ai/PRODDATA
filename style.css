@@ -367,7 +367,7 @@ button[type="submit"]:active {
     transform: scale(1.05);
 }
 
-/* Entry Card */
+/* Activity Card (Nested) */
 .activity-card {
     background: #f8f9fa;
     border: 1px solid var(--border-color);

@@ -8,7 +8,7 @@ const TARGET_SPREADSHEET_ID = "1cx4wOKIx-NmnBXWbdSgcWnUsErJ24MU9iL8HP33kQ6o";
 const ROOT_DRIVE_FOLDER_ID = "1A1Fxof5ZGjihyuR2G8SPEDrQitplo2L6";
 
 function doGet(e) {
-  if (e.parameter.action === "getSubmissions") {
+  if (e && e.parameter && e.parameter.action === "getSubmissions") {
     const ss = SpreadsheetApp.openById(TARGET_SPREADSHEET_ID);
     const sheet = getOrCreateSheet(ss, "Submissions", ["Roll No", "Timestamp"]);
     const data = sheet.getDataRange().getValues();

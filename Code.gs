@@ -1,9 +1,15 @@
-const SHEET_VISITS_ABROAD = "Visits_Abroad";
-const SHEET_ACTIVITIES = "Activities";
+const SHEET_PERSONAL_INTERNSHIPS = "Personal_Internships";
+const SHEET_OFFICIAL_INTERNSHIPS = "Official_Internships";
+const SHEET_PLACEMENT_OFFERS = "Placement_Offers";
+const SHEET_HIGHER_STUDIES = "Higher_Studies";
+const SHEET_PUBLISHED_PAPERS = "Published_Papers";
 const SHEET_AWARDS = "Awards";
+const SHEET_EVENTS = "Events";
 const SHEET_COMPETITIVE_EXAMS = "Competitive_Exams";
-const SHEET_INDUSTRIAL_VISITS = "Industrial_Visits";
-const SHEET_TRAININGS = "Trainings";
+const SHEET_VISITS_ABROAD = "Visits_Abroad";
+const SHEET_ACTIVITIES = "Activities"; // Legacy / Generic
+
+
 
 // Target storage (explicit IDs so data goes to the right places)
 const TARGET_SPREADSHEET_ID = "1XoPGKBUMrhIxXxUK028K0BtsT4YFL3TKu3JesrkHbJU";
@@ -224,22 +230,24 @@ function createEntryFolder(student, semesterFolder, sectionName, entryLabel) {
   return folder;
 }
 
+function uploadProofFiles(files, student, sectionFolderName, entryLabel, semesterFolder) {
+  if (!files || files.length === 0) return "";
+  const folder = createEntryFolder(student, semesterFolder, sectionFolderName, entryLabel);
+  files.forEach(f => saveToDrive(f, folder));
+  return folder.getUrl();
+}
+
 function writeSection(ss, sheetName, headers, student, timestamp, entries, rowBuilder, sectionFolderName, entryTitleBuilder, semesterFolderBuilder) {
   if (!entries || entries.length === 0) return;
   const sheet = getOrCreateSheet(ss, sheetName, headers);
   entries.forEach((entry) => {
     const entryTitle = entryTitleBuilder(entry) || Utilities.formatDate(timestamp, Session.getScriptTimeZone(), "yyyy-MM-dd_HHmmss");
     const semesterFolder = semesterFolderBuilder ? semesterFolderBuilder(entry) : "Semester NA";
-    const entryFolder = createEntryFolder(student, semesterFolder, sectionFolderName, entryTitle);
-
-    let proofLink = "";
-    if (entry.files && entry.files.length > 0) {
-      entry.files.forEach((f) => saveToDrive(f, entryFolder));
-      proofLink = entryFolder.getUrl();
-    }
+    const proofLink = uploadProofFiles(entry.files, student, sectionFolderName, entryTitle, semesterFolder);
     sheet.appendRow(rowBuilder(entry, proofLink));
   });
 }
+
 
 function doPost(e) {
   try {
@@ -255,146 +263,117 @@ function doPost(e) {
     const student = data.student;
     const timestamp = new Date();
 
-    // Sheet 1: Visits_Abroad
+    // 1. Placement Offers
     writeSection(
       ss,
-      SHEET_VISITS_ABROAD,
-      ["Timestamp", "Roll No", "Name", "Place of Visit", "Period From", "Period To", "Purpose", "Proof Link"],
+      SHEET_PLACEMENT_OFFERS,
+      ["Timestamp", "Roll No", "Name", "Contact Details", "Company Name", "Role", "Pay Package (Lakhs/Annum)", "Proof Link"],
       student,
       timestamp,
-      data.visitsAbroad || [],
-      (entry, proofLink) => [
-        timestamp,
-        student.rollNo,
-        student.name,
-        entry.place || "",
-        entry.periodFrom || "",
-        entry.periodTo || "",
-        entry.purpose || "",
-        proofLink
-      ],
-      "Visits Abroad",
-      (entry) => `${entry.place || "Visit"} - ${entry.periodFrom || ""}`.trim(),
+      data.placementOffers || [],
+      (entry, proofLink) => [timestamp, student.rollNo, student.name, entry.contactDetails || "", entry.companyName || "", entry.role || "", entry.payPackage || "", proofLink],
+      "Placement",
+      (entry) => `${entry.companyName || "Placement"}`,
       () => "Semester NA"
     );
 
-    // Sheet 2: Activities (with Semester enhancement)
+    // 2. Higher Studies
     writeSection(
       ss,
-      SHEET_ACTIVITIES,
-      ["Timestamp", "Roll No", "Name", "Semester", "Nature of Activity", "Date", "Award/Achievement", "Proof Link"],
+      SHEET_HIGHER_STUDIES,
+      ["Timestamp", "Roll No", "Name", "Institution Joined", "Programme Admitted To", "Proof Link"],
       student,
       timestamp,
-      data.activities || [],
-      (entry, proofLink) => [
-        timestamp,
-        student.rollNo,
-        student.name,
-        entry.semester || "",
-        entry.nature || "",
-        entry.date || "",
-        entry.award || "",
-        proofLink
-      ],
-      "Activities",
-      (entry) => `${entry.nature || "Activity"} - ${entry.date || ""}`.trim(),
-      (entry) => entry.semester || "Semester NA"
+      data.higherStudies || [],
+      (entry, proofLink) => [timestamp, student.rollNo, student.name, entry.institutionJoined || "", entry.programmeAdmitted || "", proofLink],
+      "Higher Studies",
+      (entry) => `${entry.institutionJoined || "Higher Studies"}`,
+      () => "Semester NA"
     );
 
-    // Sheet 3: Awards (with Semester enhancement)
+    // 3. Internship Official
+    writeSection(
+      ss,
+      SHEET_OFFICIAL_INTERNSHIPS,
+      ["Timestamp", "Roll No", "Name", "Contact Details", "Company Name", "Location", "Duration", "Project Title", "Proof Link"],
+      student,
+      timestamp,
+      data.officialInternships || [],
+      (entry, proofLink) => [
+        timestamp, student.rollNo, student.name, entry.contactDetails || "", entry.companyName || "", 
+        entry.location || "", entry.duration || "", entry.projectTitle || "", proofLink
+      ],
+      "Official Internship",
+      (entry) => `${entry.companyName || "Internship"}`,
+      () => "Semester NA"
+    );
+
+    // 4. Internship Personal (Dual Proof)
+    if (data.personalInternships && data.personalInternships.length > 0) {
+      const sheet = getOrCreateSheet(ss, SHEET_PERSONAL_INTERNSHIPS, ["Timestamp", "Roll No", "Name", "Contact Details", "Company Name", "Location", "Duration", "Project Title", "Offer Letter Link", "Certificate Link"]);
+      data.personalInternships.forEach(entry => {
+        const offerLink = uploadProofFiles(entry.offerFiles || [], student, "Personal Internship", (entry.companyName || "Internship") + "_Offer", "Semester NA");
+        const certLink = uploadProofFiles(entry.certFiles || [], student, "Personal Internship", (entry.companyName || "Internship") + "_Cert", "Semester NA");
+        sheet.appendRow([
+          timestamp, student.rollNo, student.name, entry.contactDetails || "", entry.companyName || "",
+          entry.location || "", entry.duration || "", entry.projectTitle || "", offerLink, certLink
+        ]);
+      });
+    }
+
+    // 5. Published Journal Papers / Conference
+    writeSection(
+      ss,
+      SHEET_PUBLISHED_PAPERS,
+      ["Timestamp", "Roll No", "Author Name", "Teacher Name (Guidance)", "Book Title (Theme)", "Paper Title", "Proceedings Title", "National/International", "Year/Month", "ISBN", "DOI/Link", "Proof Link"],
+      student,
+      timestamp,
+      data.publishedPapers || [],
+      (entry, proofLink) => [
+        timestamp, student.rollNo, student.name, entry.teacherName || "", entry.bookTitle || "",
+        entry.paperTitle || "", entry.proceedingsTitle || "", entry.level || "", entry.date || "",
+        entry.isbn || "", entry.doiLink || "", proofLink
+      ],
+      "Published Papers",
+      (entry) => `${entry.paperTitle || "Paper"}`,
+      () => "Semester NA"
+    );
+
+    // 6. Award Data
     writeSection(
       ss,
       SHEET_AWARDS,
-      ["Timestamp", "Roll No", "Name", "Semester", "Event", "Award/Position", "Awarded By", "Date", "Proof Link"],
+      ["Timestamp", "Roll No", "Student Name", "Mentor Name", "Award Name", "Awarding Body", "Month/Year", "Proof Link"],
       student,
       timestamp,
       data.awards || [],
       (entry, proofLink) => [
-        timestamp,
-        student.rollNo,
-        student.name,
-        entry.semester || "",
-        entry.event || "",
-        entry.position || "",
-        entry.awardedBy || "",
-        entry.date || "",
-        proofLink
+        timestamp, student.rollNo, student.name, entry.mentorName || "", entry.awardName || "",
+        entry.awardingBody || "", entry.date || "", proofLink
       ],
       "Awards",
-      (entry) => `${entry.event || "Award"} - ${entry.date || ""}`.trim(),
-      (entry) => entry.semester || "Semester NA"
-    );
-
-    // Sheet 4: Competitive_Exams
-    writeSection(
-      ss,
-      SHEET_COMPETITIVE_EXAMS,
-      ["Timestamp", "Roll No", "Name", "Exam", "Appeared", "Qualified", "Score", "Proof Link"],
-      student,
-      timestamp,
-      data.competitiveExams || [],
-      (entry, proofLink) => [
-        timestamp,
-        student.rollNo,
-        student.name,
-        entry.exam || "",
-        entry.appeared || "",
-        entry.qualified || "",
-        entry.score || "",
-        proofLink
-      ],
-      "Competitive Exams",
-      (entry) => `${entry.exam || "Exam"}`.trim(),
+      (entry) => `${entry.awardName || "Award"}`,
       () => "Semester NA"
     );
 
-    // Sheet 5: Industrial_Visits
+    // 7. Event Data
     writeSection(
       ss,
-      SHEET_INDUSTRIAL_VISITS,
-      ["Timestamp", "Roll No", "Name", "Company", "Period From", "Period To", "Area", "No. of Students", "Proof Link"],
+      SHEET_EVENTS,
+      ["Timestamp", "Roll No", "Student Name", "Event Name", "Team/Individual", "Award/Medal", "Level", "Month/Year", "Proof Link"],
       student,
       timestamp,
-      data.industrialVisits || [],
+      data.events || [],
       (entry, proofLink) => [
-        timestamp,
-        student.rollNo,
-        student.name,
-        entry.company || "",
-        entry.periodFrom || "",
-        entry.periodTo || "",
-        entry.area || "",
-        entry.noOfStudents || "",
-        proofLink
+        timestamp, student.rollNo, student.name, entry.eventName || "", entry.participationType || "",
+        entry.medal || "", entry.level || "", entry.date || "", proofLink
       ],
-      "Industrial Visit",
-      (entry) => `${entry.company || "Industrial Visit"} - ${entry.periodFrom || ""}`.trim(),
+      "Events",
+      (entry) => `${entry.eventName || "Event"}`,
       () => "Semester NA"
     );
 
-    // Sheet 6: Trainings (with Semester enhancement)
-    writeSection(
-      ss,
-      SHEET_TRAININGS,
-      ["Timestamp", "Roll No", "Name", "Semester", "Company", "Period From", "Period To", "Area/Project Title", "Proof Link"],
-      student,
-      timestamp,
-      data.trainings || [],
-      (entry, proofLink) => [
-        timestamp,
-        student.rollNo,
-        student.name,
-        entry.semester || "",
-        entry.company || "",
-        entry.periodFrom || "",
-        entry.periodTo || "",
-        entry.areaOrTitle || "",
-        proofLink
-      ],
-      "Training/Internship",
-      (entry) => `${entry.company || "Training"} - ${entry.periodFrom || ""}`.trim(),
-      (entry) => entry.semester || "Semester NA"
-    );
+
 
     return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
   } catch (err) {

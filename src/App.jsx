@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import './App.css'
 import { SUBJECTS_DATA, GRADE_POINTS, STUDENTS } from './constants/subjects'
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyxKlLmCJbxTIlnG1I8kZ4y5B2oE44MMWJVt_TM9Jskm-LmC9EtyKHyfHtLTYYn--HV/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyozIZbbaGt2DfUzPdElI6RVSnjNOgguffht01315K-Ad5hH6h4rgqGvlkO3IuOU2jl/exec";
 
 function App() {
   const [step, setStep] = useState(1); // 1: Info, 2: Academic, 3: Activities, 4: Review
@@ -124,7 +124,7 @@ function App() {
   const updateActivity = (id, field, value) => setActivities(activities.map(a => a.id === id ? { ...a, [field]: value } : a));
   const removeActivity = (id) => setActivities(activities.filter(a => a.id !== id));
 
-  const handleFileUpload = async (id, files) => {
+  const handleFileUpload = async (id, files, field = 'files') => {
     const processedFiles = [];
     for (let file of files) {
       const reader = new FileReader();
@@ -135,20 +135,25 @@ function App() {
       const base64 = await base64Promise;
       processedFiles.push({ base64, type: file.type, name: file.name });
     }
-    updateActivity(id, 'files', processedFiles);
+    updateActivity(id, field, processedFiles);
   };
 
+
   // Submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const academicWithCalcs = JSON.parse(JSON.stringify(academicData));
-      Object.keys(academicWithCalcs).forEach(sem => {
-        academicWithCalcs[sem].gpa = calculateGPA(sem);
-        academicWithCalcs[sem].cgpa = calculateProgressiveCGPA(sem);
-      });
-      const payload = { student, activities, academic: academicWithCalcs };
+      const groupedActivities = {
+        placementOffers: activities.filter(a => a.category === "Placement Offer"),
+        higherStudies: activities.filter(a => a.category === "Higher Studies"),
+        officialInternships: activities.filter(a => a.category === "Internship Official"),
+        personalInternships: activities.filter(a => a.category === "Internship Personal"),
+        publishedPapers: activities.filter(a => a.category === "Published Journal Papers / Conference"),
+        awards: activities.filter(a => a.category === "Award Data"),
+        events: activities.filter(a => a.category === "Event Data"),
+        activities: activities.filter(a => ["Awards / Prize Won", "Course Completed", "Sports Participation / Achievement"].includes(a.category)),
+        visitsAbroad: activities.filter(a => a.category === "Visit Abroad"),
+        competitiveExams: activities.filter(a => a.category === "Competitive Exam")
+      };
+
+      const payload = { student, ...groupedActivities, academic: academicWithCalcs };
       const response = await fetch(SCRIPT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -157,6 +162,7 @@ function App() {
       const result = await response.json();
       if (result.success) setSuccess(true);
       else alert("Submission Error: " + result.error);
+
     } catch (err) {
       alert("Submission failed! Check connection.");
     } finally {
@@ -241,11 +247,15 @@ function App() {
                   <div className="form-group"><label>Category</label>
                     <select required value={act.category} onChange={(e) => updateActivity(act.id, 'category', e.target.value)}>
                       <option value="" disabled>Select Category</option>
-                      <option value="Awards / Prize Won">Awards / Prize Won</option>
-                      <option value="Course Completed">Course Completed</option>
-                      <option value="Sports Participation / Achievement">Sports Participation / Achievement</option>
-                      <option value="In-Plant Training">In-Plant Training</option>
-                      <option value="Internship">Internship</option>
+                      <option value="Placement Offer">1. Placement Offer</option>
+                      <option value="Higher Studies">2. Higher Studies</option>
+                      <option value="Internship Official">3. Internship Official</option>
+                      <option value="Internship Personal">4. Internship Personal</option>
+                      <option value="Published Journal Papers / Conference">5. Published Journal Papers / Conference</option>
+                      <option value="Award Data">6. Award Data</option>
+                      <option value="Event Data">7. Event Data</option>
+                      <option value="Competitive Exam">Competitive Exam</option>
+                      <option value="Visit Abroad">Visit Abroad</option>
                     </select>
                   </div>
                   <div className="form-group" style={{ marginBottom: '15px' }}>
@@ -254,7 +264,9 @@ function App() {
                       {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <option key={s} value={s}>Semester {s}</option>)}
                     </select>
                   </div>
-                  <DynamicFields activity={act} update={(f, v) => updateActivity(act.id, f, v)} handleFile={(f) => handleFileUpload(act.id, f)} />
+                  <DynamicFields activity={act} student={student} update={(f, v) => updateActivity(act.id, f, v)} handleFile={(f, field) => handleFileUpload(act.id, f, field)} />
+
+
                 </div>
               ))}
             </section>
@@ -300,43 +312,132 @@ function App() {
         </div>
       )}
     </div>
-  )
+  );
 }
 
-function DynamicFields({ activity, update, handleFile }) {
+function DynamicFields({ activity, student, update, handleFile }) {
   const cat = activity.category;
   if (!cat) return <p style={{ textAlign: 'center', opacity: 0.5, padding: '20px' }}>Provide details for this activity.</p>;
   return (
     <div className="dynamic-inputs">
-      <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-        {cat === "Awards / Prize Won" && <>
-          <div className="form-group"><label>Award Name</label><input required type="text" onChange={e => update('awardName', e.target.value)} /></div>
-          <div className="form-group"><label>Date</label><input required type="date" onChange={e => update('date', e.target.value)} /></div>
-        </>}
-        {cat === "Course Completed" && <>
-          <div className="form-group"><label>Course Name</label><input required type="text" onChange={e => update('courseName', e.target.value)} /></div>
-          <div className="form-group"><label>Cert No</label><input required type="text" onChange={e => update('certificateNo', e.target.value)} /></div>
-          <div className="form-group"><label>Date</label><input required type="date" onChange={e => update('date', e.target.value)} /></div>
-        </>}
-        {cat === "Sports Participation / Achievement" && <>
-          <div className="form-group"><label>Event Name</label><input required type="text" onChange={e => update('eventName', e.target.value)} /></div>
-          <div className="form-group"><label>Place</label><input required type="text" onChange={e => update('place', e.target.value)} /></div>
-          <div className="form-group"><label>Level</label><select required onChange={e => update('level', e.target.value)}><option value="">-</option><option value="Intra">Intra</option><option value="Inter">Inter</option></select></div>
-          <div className="form-group"><label>Cat</label><select required onChange={e => update('sportCategory', e.target.value)}><option value="">-</option><option value="Dist">District</option><option value="State">State</option><option value="Nat">National</option><option value="Intl">International</option></select></div>
-        </>}
-        {(cat === "In-Plant Training" || cat === "Internship") && <>
-          <div className="form-group"><label>Company</label><input required type="text" onChange={e => update('companyName', e.target.value)} /></div>
-          <div className="form-group"><label>Location</label><input required type="text" onChange={e => update('location', e.target.value)} /></div>
-          <div className="form-group"><label>Start</label><input required type="date" onChange={e => update('startDate', e.target.value)} /></div>
-          <div className="form-group"><label>End</label><input required type="date" onChange={e => update('endDate', e.target.value)} /></div>
-        </>}
+      <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '15px' }}>
+        <div className="form-group"><label>Roll Number</label><input type="text" value={student.rollNo} readOnly className="readonly-input" /></div>
+        <div className="form-group"><label>Student Name</label><input type="text" value={student.name} readOnly className="readonly-input" /></div>
       </div>
-      <div className="form-group"><label>Upload Proof (PDF/JPG)</label>
-        <input type="file" multiple accept=".pdf,.jpg,.png" onChange={(e) => handleFile(e.target.files)} />
-        {activity.files.length > 0 && <span style={{ fontSize: '0.8rem', color: 'var(--success)' }}> ✓ {activity.files.length} files attached</span>}
+
+      <div className="form-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+        {cat === "Placement Offer" && <>
+          <div className="form-group"><label>Contact Details</label><input required type="text" placeholder="Phone / Personal Email" onChange={e => update('contactDetails', e.target.value)} /></div>
+          <div className="form-group"><label>Company Name</label><input required type="text" onChange={e => update('companyName', e.target.value)} /></div>
+          <div className="form-group"><label>Role</label><input required type="text" placeholder="Designation" onChange={e => update('role', e.target.value)} /></div>
+          <div className="form-group"><label>Pay Package (Lakhs per annum)</label><input required type="number" step="0.1" onChange={e => update('payPackage', e.target.value)} /></div>
+          <div className="form-group" style={{ gridColumn: 'span 2' }}><label>Upload Proof (Offer Letter)</label>
+            <input type="file" required accept=".pdf,.jpg,.png" onChange={(e) => handleFile(e.target.files)} />
+            {activity.files?.length > 0 && <span className="success-tag">✓ Attached</span>}
+          </div>
+        </>}
+
+        {cat === "Higher Studies" && <>
+          <div className="form-group"><label>Institution Joined</label><input required type="text" onChange={e => update('institutionJoined', e.target.value)} /></div>
+          <div className="form-group"><label>Programme Admitted To</label><input required type="text" placeholder="e.g., MSc, MBA" onChange={e => update('programmeAdmitted', e.target.value)} /></div>
+          <div className="form-group" style={{ gridColumn: 'span 2' }}><label>Upload Proof (Admission Letter/ID)</label>
+            <input type="file" required accept=".pdf,.jpg,.png" onChange={(e) => handleFile(e.target.files)} />
+          </div>
+        </>}
+
+        {(cat === "Internship Official" || cat === "Internship Personal") && <>
+          <div className="form-group"><label>Contact Details</label><input required type="text" onChange={e => update('contactDetails', e.target.value)} /></div>
+          <div className="form-group"><label>Company Name</label><input required type="text" onChange={e => update('companyName', e.target.value)} /></div>
+          <div className="form-group"><label>Location</label><input required type="text" onChange={e => update('location', e.target.value)} /></div>
+          <div className="form-group"><label>Duration</label><input required type="text" placeholder="e.g. 3 Months" onChange={e => update('duration', e.target.value)} /></div>
+          <div className="form-group" style={{ gridColumn: 'span 2' }}><label>Project Title</label><input required type="text" onChange={e => update('projectTitle', e.target.value)} /></div>
+          
+          {cat === "Internship Official" ? (
+            <div className="form-group" style={{ gridColumn: 'span 2' }}><label>Upload Proof (Certificate)</label>
+              <input type="file" required accept=".pdf,.jpg,.png" onChange={(e) => handleFile(e.target.files)} />
+            </div>
+          ) : (
+            <>
+              <div className="form-group"><label>Proof 1 (Offer Letter)</label>
+                <input type="file" required accept=".pdf,.jpg,.png" onChange={(e) => handleFile(e.target.files, 'offerFiles')} />
+                {activity.offerFiles?.length > 0 && <span className="success-tag">✓</span>}
+              </div>
+              <div className="form-group"><label>Proof 2 (Certificate)</label>
+                <input type="file" required accept=".pdf,.jpg,.png" onChange={(e) => handleFile(e.target.files, 'certFiles')} />
+                {activity.certFiles?.length > 0 && <span className="success-tag">✓</span>}
+              </div>
+            </>
+          )}
+        </>}
+
+        {cat === "Published Journal Papers / Conference" && <>
+          <div className="form-group"><label>Author Name (Student)</label><input type="text" value={student.name} readOnly /></div>
+          <div className="form-group"><label>Name of the Teacher (Underguidance)</label><input required type="text" onChange={e => update('teacherName', e.target.value)} /></div>
+          <div className="form-group" style={{ gridColumn: 'span 2' }}><label>Title of the Book Published (Theme)</label><input required type="text" onChange={e => update('bookTitle', e.target.value)} /></div>
+          <div className="form-group" style={{ gridColumn: 'span 2' }}><label>Title of the paper/chapter</label><input required type="text" onChange={e => update('paperTitle', e.target.value)} /></div>
+          <div className="form-group" style={{ gridColumn: 'span 2' }}><label>Title of the Proceedings / Conference</label><input required type="text" onChange={e => update('proceedingsTitle', e.target.value)} /></div>
+          <div className="form-group"><label>Level</label><select required onChange={e => update('level', e.target.value)}><option value="">-</option><option value="National">National</option><option value="International">International</option></select></div>
+          <div className="form-group"><label>Year and Month of publication</label><input required type="text" placeholder="MM/YYYY" onChange={e => update('date', e.target.value)} /></div>
+          <div className="form-group"><label>ISBN of book/proceedings</label><input required type="text" onChange={e => update('isbn', e.target.value)} /></div>
+          <div className="form-group"><label>DOI / Link</label><input type="text" onChange={e => update('doiLink', e.target.value)} /></div>
+          <div className="form-group" style={{ gridColumn: 'span 2' }}><label>Upload Proof (Paper PDF)</label>
+            <input type="file" required accept=".pdf,.jpg,.png" onChange={(e) => handleFile(e.target.files)} />
+          </div>
+        </>}
+
+        {cat === "Award Data" && <>
+          <div className="form-group"><label>Name of the Mentor/Guide (optional)</label><input type="text" onChange={e => update('mentorName', e.target.value)} /></div>
+          <div className="form-group"><label>Name of the award</label><input required type="text" onChange={e => update('awardName', e.target.value)} /></div>
+          <div className="form-group"><label>Awarding Body</label><input required type="text" placeholder="Govt / Recognised / College" onChange={e => update('awardingBody', e.target.value)} /></div>
+          <div className="form-group"><label>Month and Year</label><input required type="text" placeholder="MM/YYYY" onChange={e => update('date', e.target.value)} /></div>
+          <div className="form-group" style={{ gridColumn: 'span 2' }}><label>Upload Proof</label>
+            <input type="file" required accept=".pdf" onChange={(e) => handleFile(e.target.files)} />
+          </div>
+        </>}
+
+        {cat === "Event Data" && <>
+          <div className="form-group"><label>Name of the event</label><input required type="text" onChange={e => update('eventName', e.target.value)} /></div>
+          <div className="form-group"><label>Team/Individual</label><select required onChange={e => update('participationType', e.target.value)}><option value="Individual">Individual</option><option value="Team">Team</option></select></div>
+          <div className="form-group"><label>Name of the Award/medal</label><input required type="text" onChange={e => update('medal', e.target.value)} /></div>
+          <div className="form-group"><label>Level</label>
+            <select required onChange={e => update('level', e.target.value)}>
+              <option value="">-</option>
+              <option value="Intra-clg">Intra-college</option>
+              <option value="Inter-clg">Inter-college</option>
+              <option value="State">State</option>
+              <option value="National">National</option>
+              <option value="International">International</option>
+            </select>
+          </div>
+          <div className="form-group"><label>Month and Year</label><input required type="text" placeholder="MM/YYYY" onChange={e => update('date', e.target.value)} /></div>
+          <div className="form-group" style={{ gridColumn: 'span 2' }}><label>Upload Proof</label>
+            <input type="file" required accept=".pdf" onChange={(e) => handleFile(e.target.files)} />
+          </div>
+        </>}
+
+        {cat === "Competitive Exam" && <>
+          <div className="form-group"><label>Exam Name</label><input required type="text" onChange={e => update('exam', e.target.value)} /></div>
+          <div className="form-group"><label>Score</label><input required type="text" onChange={e => update('score', e.target.value)} /></div>
+          <div className="form-group"><label>Appeared</label><select required onChange={e => update('appeared', e.target.value)}><option value="Yes">Yes</option><option value="No">No</option></select></div>
+          <div className="form-group"><label>Qualified</label><select required onChange={e => update('qualified', e.target.value)}><option value="Yes">Yes</option><option value="No">No</option></select></div>
+          <div className="form-group" style={{ gridColumn: 'span 2' }}><label>Upload Proof</label>
+            <input type="file" multiple accept=".pdf,.jpg,.png" onChange={(e) => handleFile(e.target.files)} />
+          </div>
+        </>}
+
+        {cat === "Visit Abroad" && <>
+          <div className="form-group"><label>Place</label><input required type="text" onChange={e => update('place', e.target.value)} /></div>
+          <div className="form-group"><label>Purpose</label><input required type="text" onChange={e => update('purpose', e.target.value)} /></div>
+          <div className="form-group"><label>Start Date</label><input required type="date" onChange={e => update('periodFrom', e.target.value)} /></div>
+          <div className="form-group"><label>End Date</label><input required type="date" onChange={e => update('periodTo', e.target.value)} /></div>
+          <div className="form-group" style={{ gridColumn: 'span 2' }}><label>Upload Proof</label>
+            <input type="file" multiple accept=".pdf,.jpg,.png" onChange={(e) => handleFile(e.target.files)} />
+          </div>
+        </>}
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
+

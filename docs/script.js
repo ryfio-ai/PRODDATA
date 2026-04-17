@@ -23,7 +23,7 @@ const students = [
     "23P437 - RANJITH KUMAR K", "23P438 - AHAMED YASHICK M", "23P439 - KARTHIK A S"
 ];
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhxCGTe8t8H17euWdi4MFes479grJw5cDXcEWX21M77Igf4NxQf6t-MO4wlV502Bn7/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyozIZbbaGt2DfUzPdElI6RVSnjNOgguffht01315K-Ad5hH6h4rgqGvlkO3IuOU2jl/exec";
 
 const ACTIVITY_TYPES = [
     "NCC",

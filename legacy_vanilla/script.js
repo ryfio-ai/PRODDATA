@@ -23,7 +23,7 @@ const students = [
     "23P437 - RANJITH KUMAR K", "23P438 - AHAMED YASHICK M", "23P439 - KARTHIK A S"
 ];
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhxCGTe8t8H17euWdi4MFes479grJw5cDXcEWX21M77Igf4NxQf6t-MO4wlV502Bn7/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyozIZbbaGt2DfUzPdElI6RVSnjNOgguffht01315K-Ad5hH6h4rgqGvlkO3IuOU2jl/exec";
 
 const ACTIVITY_TYPES = [
     "NCC",
@@ -51,25 +51,30 @@ const EXAM_TYPES = ["GATE", "CAT", "GRE", "IELTS", "TOEFL", "AFCAT", "CDS", "HAL
 const SEMESTERS = ["Semester 1", "Semester 2", "Semester 3", "Semester 4", "Semester 5", "Semester 6", "Semester 7", "Semester 8"];
 
 const sectionState = {
-    visitsAbroad: { count: 0 },
-    activities: { count: 0 },
+    placementOffers: { count: 0 },
+    higherStudies: { count: 0 },
+    officialInternships: { count: 0 },
+    personalInternships: { count: 0 },
+    publishedPapers: { count: 0 },
     awards: { count: 0 },
-    competitiveExams: { count: 0 },
-    industrialVisits: { count: 0 },
-    trainings: { count: 0 }
+    events: { count: 0 }
 };
+
 
 document.addEventListener('DOMContentLoaded', () => {
     initTabs();
     initStudentSelectors();
-    initDynamicSection('visitsAbroad', renderVisitAbroadBlock, 'addVisitAbroadBtn', 'visitsAbroadContainer');
-    initDynamicSection('activities', renderActivityBlock, 'addActivityBtn', 'activitiesContainer');
+    initDynamicSection('placementOffers', renderPlacementBlock, 'addPlacementOfferBtn', 'placementOffersContainer');
+    initDynamicSection('higherStudies', renderHigherStudiesBlock, 'addHigherStudiesBtn', 'higherStudiesContainer');
+    initDynamicSection('officialInternships', renderInternshipOfficialBlock, 'addOfficialInternshipBtn', 'officialInternshipsContainer');
+    initDynamicSection('personalInternships', renderInternshipPersonalBlock, 'addPersonalInternshipBtn', 'personalInternshipsContainer');
+    initDynamicSection('publishedPapers', renderPublishedPaperBlock, 'addPublishedPapersBtn', 'publishedPapersContainer');
     initDynamicSection('awards', renderAwardBlock, 'addAwardBtn', 'awardsContainer');
-    initDynamicSection('competitiveExams', renderExamBlock, 'addExamBtn', 'competitiveExamsContainer');
-    initDynamicSection('industrialVisits', renderIndustrialVisitBlock, 'addIndustrialVisitBtn', 'industrialVisitsContainer');
-    initDynamicSection('trainings', renderTrainingBlock, 'addTrainingBtn', 'trainingsContainer');
+    initDynamicSection('events', renderEventBlock, 'addEventBtn', 'eventsContainer');
+
     initFormSubmission();
 });
+
 
 function initTabs() {
     const tabBtns = document.querySelectorAll('.tab-btn');
@@ -140,38 +145,40 @@ function addEntryBlock(sectionKey, container, renderFn) {
     block.dataset.section = sectionKey;
     block.dataset.entryId = String(id);
     block.id = `${sectionKey}-${id}`;
-    block.innerHTML = `
-        <button type="button" class="remove-activity-btn" aria-label="Remove entry">&times;</button>
-        ${renderFn(id)}
-        ${renderProofUpload(id)}
-    `;
+    
+    // Custom handling for Personal Internship which needs dual proof
+    let innerHTML = `<button type="button" class="remove-activity-btn" aria-label="Remove entry">&times;</button>${renderFn(id)}`;
+    if (sectionKey !== 'personalInternships') {
+        innerHTML += renderProofUpload(id);
+    }
+    block.innerHTML = innerHTML;
 
     const removeBtn = block.querySelector('.remove-activity-btn');
     removeBtn.addEventListener('click', () => block.remove());
 
-    const fileInput = block.querySelector('.file-input');
-    const fileInfo = block.querySelector('.file-info');
-    fileInput.addEventListener('change', () => handleFiles(fileInput.files, fileInfo, fileInput));
+    block.querySelectorAll('.file-input').forEach(input => {
+        const infoEl = input.closest('.form-group').querySelector('.file-info');
+        input.addEventListener('change', () => handleFiles(input.files, infoEl, input));
+    });
 
     wireConditionalFields(block);
     container.appendChild(block);
-
-    // Fill readonly roll/name if present
     syncPrefilledStudentFields();
 }
 
-function renderProofUpload(id) {
+function renderProofUpload(id, label = "Proof Upload (Max 5MB)", klass = "file-input") {
     return `
         <div class="form-group file-upload-group">
-            <label>Proof Upload (Max 5MB)</label>
+            <label>${label}</label>
             <div class="file-drop-area">
-                <input type="file" class="file-input" multiple accept=".pdf,.jpg,.jpeg,.png">
+                <input type="file" class="${klass}" multiple accept=".pdf,.jpg,.jpeg,.png">
                 <span class="file-msg">Choose files or drag here</span>
             </div>
             <div class="file-info" id="fileInfo-${id}"></div>
         </div>
     `;
 }
+
 
 function renderSemesterDropdown(id, fieldId) {
     const options = SEMESTERS.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join('');
@@ -186,196 +193,146 @@ function renderSemesterDropdown(id, fieldId) {
     `;
 }
 
-// Tab 1: Visits Abroad
-function renderVisitAbroadBlock(id) {
+// 1. Placement Offer
+function renderPlacementBlock(id) {
     return `
         <div class="form-row">
-            <div class="form-group">
-                <label for="visitStudentName-${id}">Name of student</label>
-                <input type="text" id="visitStudentName-${id}" data-prefill="name" readonly placeholder="Auto-filled from selection">
-            </div>
-            <div class="form-group">
-                <label for="visitPlace-${id}">Place of visit</label>
-                <input type="text" id="visitPlace-${id}" required>
-            </div>
+            <div class="form-group"><label>Roll Number</label><input type="text" data-prefill="rollNo" readonly></div>
+            <div class="form-group"><label>Student Name</label><input type="text" data-prefill="name" readonly></div>
         </div>
         <div class="form-row">
-            <div class="form-group">
-                <label for="visitFrom-${id}">Period (from)</label>
-                <input type="date" id="visitFrom-${id}" required>
-            </div>
-            <div class="form-group">
-                <label for="visitTo-${id}">Period (to)</label>
-                <input type="date" id="visitTo-${id}" required>
-            </div>
+            <div class="form-group"><label>Contact Details</label><input type="text" id="pcContact-${id}" required placeholder="Phone / Email"></div>
+            <div class="form-group"><label>Company Name</label><input type="text" id="pcCompany-${id}" required></div>
         </div>
-        <div class="form-group">
-            <label for="visitPurpose-${id}">Purpose</label>
-            <input type="text" id="visitPurpose-${id}" required>
+        <div class="form-row">
+            <div class="form-group"><label>Role</label><input type="text" id="pcRole-${id}" required placeholder="Designation"></div>
+            <div class="form-group"><label>Pay Package (Lakhs per annum)</label><input type="number" id="pcPackage-${id}" required step="0.1"></div>
         </div>
     `;
 }
 
-// Tab 2: Co-curricular Activities
-function renderActivityBlock(id) {
-    const typeOptions = ACTIVITY_TYPES.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+// 2. Higher Studies
+function renderHigherStudiesBlock(id) {
     return `
-        ${renderSemesterDropdown(id, 'activitySemester')}
-        <div class="form-group">
-            <label for="activityNature-${id}">Nature of Activity</label>
-            <select id="activityNature-${id}" required data-other-toggle="activityNatureOther-${id}">
-                <option value="" disabled selected>Select Activity</option>
-                ${typeOptions}
-            </select>
-        </div>
-        <div class="form-group hidden" id="activityNatureOtherWrap-${id}">
-            <label for="activityNatureOther-${id}">Other (please specify)</label>
-            <input type="text" id="activityNatureOther-${id}" placeholder="Enter activity name">
+        <div class="form-row">
+            <div class="form-group"><label>Roll Number</label><input type="text" data-prefill="rollNo" readonly></div>
+            <div class="form-group"><label>Student Name</label><input type="text" data-prefill="name" readonly></div>
         </div>
         <div class="form-row">
-            <div class="form-group">
-                <label for="activityDate-${id}">Date</label>
-                <input type="date" id="activityDate-${id}" required>
-            </div>
-            <div class="form-group">
-                <label for="activityAward-${id}">Award / Achievement (optional)</label>
-                <input type="text" id="activityAward-${id}" placeholder="e.g., Winner / Participant / Merit">
-            </div>
+            <div class="form-group"><label>Institution Joined</label><input type="text" id="hsInst-${id}" required></div>
+            <div class="form-group"><label>Programme Admitted To</label><input type="text" id="hsProg-${id}" required placeholder="e.g., MSc, MBA"></div>
         </div>
     `;
 }
 
-// Tab 3: Awards Won
+// 3. Internship Official
+function renderInternshipOfficialBlock(id) {
+    return `
+        ${renderSemesterDropdown(id, 'ioSem')}
+        <div class="form-row">
+            <div class="form-group"><label>Contact Details</label><input type="text" id="ioContact-${id}" required></div>
+            <div class="form-group"><label>Company Name</label><input type="text" id="ioCompany-${id}" required></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>Location</label><input type="text" id="ioLoc-${id}" required></div>
+            <div class="form-group"><label>Duration</label><input type="text" id="ioDur-${id}" required placeholder="e.g. 3 Months"></div>
+        </div>
+        <div class="form-group"><label>Project Title</label><input type="text" id="ioProj-${id}" required></div>
+    `;
+}
+
+// 4. Internship Personal
+function renderInternshipPersonalBlock(id) {
+    return `
+        ${renderSemesterDropdown(id, 'ipSem')}
+        <div class="form-row">
+            <div class="form-group"><label>Contact Details</label><input type="text" id="ipContact-${id}" required></div>
+            <div class="form-group"><label>Company Name</label><input type="text" id="ipCompany-${id}" required></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>Location</label><input type="text" id="ipLoc-${id}" required></div>
+            <div class="form-group"><label>Duration</label><input type="text" id="ipDur-${id}" required placeholder="e.g. 3 Months"></div>
+        </div>
+        <div class="form-group"><label>Project Title</label><input type="text" id="ipProj-${id}" required></div>
+        <div class="form-row">
+            ${renderProofUpload(id, "Proof 1 (Offer Letter)", "offer-files")}
+            ${renderProofUpload(id, "Proof 2 (Certificate)", "cert-files")}
+        </div>
+    `;
+}
+
+// 5. Papers Publication
+function renderPublishedPaperBlock(id) {
+    return `
+        <div class="form-row">
+            <div class="form-group"><label>Author Name (Student)</label><input type="text" data-prefill="name" readonly></div>
+            <div class="form-group"><label>Name of the Teacher (Underguidance)</label><input type="text" id="ppGuide-${id}" required></div>
+        </div>
+        <div class="form-group"><label>Title of the Book Published (Theme)</label><input type="text" id="ppBook-${id}" required></div>
+        <div class="form-group"><label>Title of the paper/chapter</label><input type="text" id="ppTitle-${id}" required></div>
+        <div class="form-group"><label>Title of the Proceedings / Conference</label><input type="text" id="ppConf-${id}" required></div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Level</label>
+                <select id="ppLevel-${id}" required>
+                    <option value="National">National</option>
+                    <option value="International">International</option>
+                </select>
+            </div>
+            <div class="form-group"><label>Year and Month (MM/YYYY)</label><input type="text" id="ppDate-${id}" required></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label>ISBN of book/proceedings</label><input type="text" id="ppIsbn-${id}" required></div>
+            <div class="form-group"><label>DOI / Link</label><input type="text" id="ppDoi-${id}"></div>
+        </div>
+    `;
+}
+
+// 6. Award Data
 function renderAwardBlock(id) {
     return `
-        ${renderSemesterDropdown(id, 'awardSemester')}
         <div class="form-row">
-            <div class="form-group">
-                <label for="awardRollNo-${id}">Roll No</label>
-                <input type="text" id="awardRollNo-${id}" data-prefill="rollNo" readonly placeholder="Auto-filled from selection">
-            </div>
-            <div class="form-group">
-                <label for="awardEvent-${id}">Event name</label>
-                <input type="text" id="awardEvent-${id}" required>
-            </div>
+            <div class="form-group"><label>Mentor/Guide Name (optional)</label><input type="text" id="awMentor-${id}"></div>
+            <div class="form-group"><label>Name of the award</label><input type="text" id="awName-${id}" required></div>
         </div>
         <div class="form-row">
-            <div class="form-group">
-                <label for="awardPosition-${id}">Award / Position</label>
-                <input type="text" id="awardPosition-${id}" required>
-            </div>
-            <div class="form-group">
-                <label for="awardBy-${id}">Awarded by (institution name)</label>
-                <input type="text" id="awardBy-${id}" required>
-            </div>
-        </div>
-        <div class="form-group">
-            <label for="awardDate-${id}">Date</label>
-            <input type="date" id="awardDate-${id}" required>
+            <div class="form-group"><label>Awarding Body</label><input type="text" id="awBody-${id}" required placeholder="Govt / College"></div>
+            <div class="form-group"><label>Month and Year</label><input type="text" id="awDate-${id}" required placeholder="MM/YYYY"></div>
         </div>
     `;
 }
 
-// Tab 4: Competitive Exams
-function renderExamBlock(id) {
-    const examOptions = EXAM_TYPES.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
+// 7. Event Data
+function renderEventBlock(id) {
     return `
-        <div class="form-group">
-            <label for="examName-${id}">Exam name</label>
-            <select id="examName-${id}" required data-other-toggle="examOther-${id}">
-                <option value="" disabled selected>Select Exam</option>
-                ${examOptions}
-            </select>
-        </div>
-        <div class="form-group hidden" id="examOtherWrap-${id}">
-            <label for="examOther-${id}">Other (please specify)</label>
-            <input type="text" id="examOther-${id}" placeholder="Enter exam name">
-        </div>
         <div class="form-row">
+            <div class="form-group"><label>Name of the event</label><input type="text" id="evName-${id}" required></div>
             <div class="form-group">
-                <label for="examAppeared-${id}">Appeared</label>
-                <select id="examAppeared-${id}" required>
-                    <option value="" disabled selected>Select</option>
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="examQualified-${id}">Qualified</label>
-                <select id="examQualified-${id}" required>
-                    <option value="" disabled selected>Select</option>
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
+                <label>Team/Individual</label>
+                <select id="evType-${id}" required>
+                    <option value="Individual">Individual</option>
+                    <option value="Team">Team</option>
                 </select>
             </div>
         </div>
-        <div class="form-group">
-            <label for="examScore-${id}">Score (optional)</label>
-            <input type="text" id="examScore-${id}" placeholder="e.g., 650 / 7.5 / AIR 1234">
+        <div class="form-row">
+            <div class="form-group"><label>Award/medal</label><input type="text" id="evMedal-${id}" required></div>
+            <div class="form-group">
+               <label>Level</label>
+               <select id="evLevel-${id}" required>
+                   <option value="Intra-clg">Intra-college</option>
+                   <option value="Inter-clg">Inter-college</option>
+                   <option value="State">State</option>
+                   <option value="National">National</option>
+                   <option value="International">International</option>
+               </select>
+            </div>
         </div>
+        <div class="form-group"><label>Month and Year</label><input type="text" id="evDate-${id}" required placeholder="MM/YYYY"></div>
     `;
 }
 
-// Tab 5: Industrial Visit
-function renderIndustrialVisitBlock(id) {
-    return `
-        <div class="form-group">
-            <label for="indCompany-${id}">Company name</label>
-            <input type="text" id="indCompany-${id}" required>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label for="indFrom-${id}">Period (from)</label>
-                <input type="date" id="indFrom-${id}" required>
-            </div>
-            <div class="form-group">
-                <label for="indTo-${id}">Period (to)</label>
-                <input type="date" id="indTo-${id}" required>
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label for="indArea-${id}">Area / purpose of visit</label>
-                <input type="text" id="indArea-${id}" required>
-            </div>
-            <div class="form-group">
-                <label for="indCount-${id}">No. of students</label>
-                <input type="number" id="indCount-${id}" required min="1" step="1" placeholder="e.g., 58">
-            </div>
-        </div>
-    `;
-}
 
-// Tab 6: Training / Internship
-function renderTrainingBlock(id) {
-    return `
-        ${renderSemesterDropdown(id, 'trainingSemester')}
-        <div class="form-row">
-            <div class="form-group">
-                <label for="trainingCompany-${id}">Company name</label>
-                <input type="text" id="trainingCompany-${id}" required>
-            </div>
-            <div class="form-group">
-                <label for="trainingRollNo-${id}">Roll No</label>
-                <input type="text" id="trainingRollNo-${id}" data-prefill="rollNo" readonly placeholder="Auto-filled from selection">
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group">
-                <label for="trainingFrom-${id}">Period (from)</label>
-                <input type="date" id="trainingFrom-${id}" required>
-            </div>
-            <div class="form-group">
-                <label for="trainingTo-${id}">Period (to)</label>
-                <input type="date" id="trainingTo-${id}" required>
-            </div>
-        </div>
-        <div class="form-group">
-            <label for="trainingArea-${id}">Area of training / project title</label>
-            <input type="text" id="trainingArea-${id}" required>
-        </div>
-    `;
-}
 
 function wireConditionalFields(block) {
     // Show "Other" text box when select value is "Other"
@@ -456,126 +413,149 @@ async function collectAllData() {
 
     return {
         student: { rollNo, name, email },
-        visitsAbroad: await collectVisitsAbroad(),
-        activities: await collectActivities(),
-        awards: await collectAwards(),
-        competitiveExams: await collectCompetitiveExams(),
-        industrialVisits: await collectIndustrialVisits(),
-        trainings: await collectTrainings()
+        placementOffers: await collectPlacement(),
+        higherStudies: await collectHigherStudies(),
+        officialInternships: await collectInternships('officialInternships'),
+        personalInternships: await collectInternshipsPersonal(),
+        publishedPapers: await collectPublishedPapers(),
+        awards: await collectAwardsRefined(),
+        events: await collectEvents()
     };
+
 }
+
 
 function getBlocks(sectionKey) {
     return Array.from(document.querySelectorAll(`.entry-card[data-section="${sectionKey}"]`));
 }
 
-async function collectFilesFromBlock(block) {
+async function collectPlacement() {
+    const items = [];
+    for (let block of getBlocks('placementOffers')) {
+        const id = block.dataset.entryId;
+        const contactDetails = document.getElementById(`pcContact-${id}`)?.value || "";
+        const companyName = document.getElementById(`pcCompany-${id}`)?.value || "";
+        const role = document.getElementById(`pcRole-${id}`)?.value || "";
+        const payPackage = document.getElementById(`pcPackage-${id}`)?.value || "";
+        const files = await collectFilesFromBlock(block);
+        if (!companyName && files.length === 0) continue;
+        items.push({ contactDetails, companyName, role, payPackage, files });
+    }
+    return items;
+}
+
+async function collectHigherStudies() {
+    const items = [];
+    for (let block of getBlocks('higherStudies')) {
+        const id = block.dataset.entryId;
+        const institutionJoined = document.getElementById(`hsInst-${id}`)?.value || "";
+        const programmeAdmitted = document.getElementById(`hsProg-${id}`)?.value || "";
+        const files = await collectFilesFromBlock(block);
+        if (!institutionJoined && files.length === 0) continue;
+        items.push({ institutionJoined, programmeAdmitted, files });
+    }
+    return items;
+}
+
+async function collectInternships(sectionKey) {
+    const items = [];
+    for (let block of getBlocks(sectionKey)) {
+        const id = block.dataset.entryId;
+        const semester = document.getElementById(`ioSem-${id}`)?.value || "";
+        const contactDetails = document.getElementById(`ioContact-${id}`)?.value || "";
+        const companyName = document.getElementById(`ioCompany-${id}`)?.value || "";
+        const location = document.getElementById(`ioLoc-${id}`)?.value || "";
+        const duration = document.getElementById(`ioDur-${id}`)?.value || "";
+        const projectTitle = document.getElementById(`ioProj-${id}`)?.value || "";
+        const files = await collectFilesFromBlock(block);
+        if (!companyName && files.length === 0) continue;
+        items.push({ semester, contactDetails, companyName, location, duration, projectTitle, files });
+    }
+    return items;
+}
+
+async function collectInternshipsPersonal() {
+    const items = [];
+    for (let block of getBlocks('personalInternships')) {
+        const id = block.dataset.entryId;
+        const semester = document.getElementById(`ipSem-${id}`)?.value || "";
+        const contactDetails = document.getElementById(`ipContact-${id}`)	?.value || "";
+        const companyName = document.getElementById(`ipCompany-${id}`)?.value || "";
+        const location = document.getElementById(`ipLoc-${id}`)?.value || "";
+        const duration = document.getElementById(`ipDur-${id}`)?.value || "";
+        const projectTitle = document.getElementById(`ipProj-${id}`)?.value || "";
+        
+        const offerFiles = await collectFilesFromSelector(block, '.offer-files');
+        const certFiles = await collectFilesFromSelector(block, '.cert-files');
+        
+        if (!companyName && offerFiles.length === 0) continue;
+        items.push({ semester, contactDetails, companyName, location, duration, projectTitle, offerFiles, certFiles });
+    }
+    return items;
+}
+
+async function collectFilesFromSelector(block, selector) {
     const files = [];
-    const fileInput = block.querySelector('.file-input');
-    if (!fileInput) return files;
-    for (let file of fileInput.files) {
-        const base64 = await toBase64(file);
-        files.push({ base64, type: file.type, name: file.name });
+    const input = block.querySelector(selector);
+    if (!input) return files;
+    for (let f of input.files) {
+        const base64 = await toBase64(f);
+        files.push({ base64, type: f.type, name: f.name });
     }
     return files;
 }
 
-async function collectVisitsAbroad() {
+async function collectPublishedPapers() {
     const items = [];
-    for (let block of getBlocks('visitsAbroad')) {
+    for (let block of getBlocks('publishedPapers')) {
         const id = block.dataset.entryId;
-        const place = document.getElementById(`visitPlace-${id}`)?.value?.trim() || "";
-        const from = document.getElementById(`visitFrom-${id}`)?.value || "";
-        const to = document.getElementById(`visitTo-${id}`)?.value || "";
-        const purpose = document.getElementById(`visitPurpose-${id}`)?.value?.trim() || "";
+        const teacherName = document.getElementById(`ppGuide-${id}`)?.value || "";
+        const bookTitle = document.getElementById(`ppBook-${id}`)?.value || "";
+        const paperTitle = document.getElementById(`ppTitle-${id}`)?.value || "";
+        const proceedingsTitle = document.getElementById(`ppConf-${id}`)?.value || "";
+        const level = document.getElementById(`ppLevel-${id}`)?.value || "";
+        const date = document.getElementById(`ppDate-${id}`)?.value || "";
+        const isbn = document.getElementById(`ppIsbn-${id}`)?.value || "";
+        const doiLink = document.getElementById(`ppDoi-${id}`)?.value || "";
         const files = await collectFilesFromBlock(block);
-        if (!place && !from && !to && !purpose && files.length === 0) continue;
-        items.push({ place, periodFrom: from, periodTo: to, purpose, files });
+        if (!paperTitle && files.length === 0) continue;
+        items.push({ teacherName, bookTitle, paperTitle, proceedingsTitle, level, date, isbn, doiLink, files });
     }
     return items;
 }
 
-async function collectActivities() {
-    const items = [];
-    for (let block of getBlocks('activities')) {
-        const id = block.dataset.entryId;
-        const semester = document.getElementById(`activitySemester-${id}`)?.value || "";
-        const nature = document.getElementById(`activityNature-${id}`)?.value || "";
-        const natureOther = document.getElementById(`activityNatureOther-${id}`)?.value?.trim() || "";
-        const date = document.getElementById(`activityDate-${id}`)?.value || "";
-        const award = document.getElementById(`activityAward-${id}`)?.value?.trim() || "";
-        const files = await collectFilesFromBlock(block);
-        const finalNature = (nature === "Other" ? natureOther : nature);
-        if (!semester && !finalNature && !date && !award && files.length === 0) continue;
-        items.push({ semester, nature: finalNature, date, award, files });
-    }
-    return items;
-}
-
-async function collectAwards() {
+async function collectAwardsRefined() {
     const items = [];
     for (let block of getBlocks('awards')) {
         const id = block.dataset.entryId;
-        const semester = document.getElementById(`awardSemester-${id}`)?.value || "";
-        const event = document.getElementById(`awardEvent-${id}`)?.value?.trim() || "";
-        const position = document.getElementById(`awardPosition-${id}`)?.value?.trim() || "";
-        const awardedBy = document.getElementById(`awardBy-${id}`)?.value?.trim() || "";
-        const date = document.getElementById(`awardDate-${id}`)?.value || "";
+        const mentorName = document.getElementById(`awMentor-${id}`)?.value || "";
+        const awardName = document.getElementById(`awName-${id}`)?.value || "";
+        const awardingBody = document.getElementById(`awBody-${id}`)?.value || "";
+        const date = document.getElementById(`awDate-${id}`)?.value || "";
         const files = await collectFilesFromBlock(block);
-        if (!semester && !event && !position && !awardedBy && !date && files.length === 0) continue;
-        items.push({ semester, event, position, awardedBy, date, files });
+        if (!awardName && files.length === 0) continue;
+        items.push({ mentorName, awardName, awardingBody, date, files });
     }
     return items;
 }
 
-async function collectCompetitiveExams() {
+async function collectEvents() {
     const items = [];
-    for (let block of getBlocks('competitiveExams')) {
+    for (let block of getBlocks('events')) {
         const id = block.dataset.entryId;
-        const exam = document.getElementById(`examName-${id}`)?.value || "";
-        const examOther = document.getElementById(`examOther-${id}`)?.value?.trim() || "";
-        const appeared = document.getElementById(`examAppeared-${id}`)?.value || "";
-        const qualified = document.getElementById(`examQualified-${id}`)?.value || "";
-        const score = document.getElementById(`examScore-${id}`)?.value?.trim() || "";
+        const eventName = document.getElementById(`evName-${id}`)?.value || "";
+        const participationType = document.getElementById(`evType-${id}`)?.value || "";
+        const medal = document.getElementById(`evMedal-${id}`)?.value || "";
+        const level = document.getElementById(`evLevel-${id}`)?.value || "";
+        const date = document.getElementById(`evDate-${id}`)?.value || "";
         const files = await collectFilesFromBlock(block);
-        const finalExam = (exam === "Other" ? examOther : exam);
-        if (!finalExam && !appeared && !qualified && !score && files.length === 0) continue;
-        items.push({ exam: finalExam, appeared, qualified, score, files });
+        if (!eventName && files.length === 0) continue;
+        items.push({ eventName, participationType, medal, level, date, files });
     }
     return items;
 }
 
-async function collectIndustrialVisits() {
-    const items = [];
-    for (let block of getBlocks('industrialVisits')) {
-        const id = block.dataset.entryId;
-        const company = document.getElementById(`indCompany-${id}`)?.value?.trim() || "";
-        const from = document.getElementById(`indFrom-${id}`)?.value || "";
-        const to = document.getElementById(`indTo-${id}`)?.value || "";
-        const area = document.getElementById(`indArea-${id}`)?.value?.trim() || "";
-        const noOfStudents = document.getElementById(`indCount-${id}`)?.value?.trim() || "";
-        const files = await collectFilesFromBlock(block);
-        if (!company && !from && !to && !area && !noOfStudents && files.length === 0) continue;
-        items.push({ company, periodFrom: from, periodTo: to, area, noOfStudents, files });
-    }
-    return items;
-}
 
-async function collectTrainings() {
-    const items = [];
-    for (let block of getBlocks('trainings')) {
-        const id = block.dataset.entryId;
-        const semester = document.getElementById(`trainingSemester-${id}`)?.value || "";
-        const company = document.getElementById(`trainingCompany-${id}`)?.value?.trim() || "";
-        const from = document.getElementById(`trainingFrom-${id}`)?.value || "";
-        const to = document.getElementById(`trainingTo-${id}`)?.value || "";
-        const areaOrTitle = document.getElementById(`trainingArea-${id}`)?.value?.trim() || "";
-        const files = await collectFilesFromBlock(block);
-        if (!semester && !company && !from && !to && !areaOrTitle && files.length === 0) continue;
-        items.push({ semester, company, periodFrom: from, periodTo: to, areaOrTitle, files });
-    }
-    return items;
-}
 
 const toBase64 = file => new Promise((resolve, reject) => {
     const reader = new FileReader();

@@ -17,12 +17,15 @@
                 <p>Department Student Portal</p>
             </div>
             <nav class="form-tabs">
-                <button type="button" class="tab-btn active" data-tab="visitsAbroad">Visits Abroad</button>
-                <button type="button" class="tab-btn" data-tab="activities">Activities</button>
-                <button type="button" class="tab-btn" data-tab="awards">Awards</button>
-                <button type="button" class="tab-btn" data-tab="competitiveExams">Competitive Exams</button>
-                <button type="button" class="tab-btn" data-tab="industrialVisits">Industrial Visit</button>
-                <button type="button" class="tab-btn" data-tab="trainings">Training/Internship</button>
+                <button type="button" class="tab-btn active" data-tab="placementOffers">1. Placement Offer</button>
+                <button type="button" class="tab-btn" data-tab="higherStudies">2. Higher Studies</button>
+                <button type="button" class="tab-btn" data-tab="officialInternships">3. Internship Official</button>
+                <button type="button" class="tab-btn" data-tab="personalInternships">4. Internship Personal</button>
+                <button type="button" class="tab-btn" data-tab="publishedPapers">5. Papers Publication</button>
+                <button type="button" class="tab-btn" data-tab="awards">6. Award Data</button>
+                <button type="button" class="tab-btn" data-tab="events">7. Event Data</button>
+
+
             </nav>
         </header>
 
@@ -46,89 +49,84 @@
                     </div>
                 </section>
 
-                <!-- Tab 1: Visits Abroad -->
-                <div id="visitsAbroadTab" class="tab-content">
+                <!-- Tab 1: Placement Offer -->
+                <div id="placementOffersTab" class="tab-content">
                     <section class="form-section">
                         <div class="section-header">
-                            <h2>Visits Abroad (by students)</h2>
-                            <button type="button" id="addVisitAbroadBtn" class="secondary-btn">+ Add Entry</button>
+                            <h2>Placement Offer</h2>
+                            <button type="button" id="addPlacementOfferBtn" class="secondary-btn">+ Add Entry</button>
                         </div>
-                        <p class="helper-text">Add one entry per visit. Upload supporting proof (ticket, invitation, certificate, etc.).</p>
-                        <div id="visitsAbroadContainer">
-                            <!-- Visit abroad blocks will be added here -->
-                        </div>
+                        <div id="placementOffersContainer"></div>
                     </section>
                 </div>
 
-                <!-- Tab 2: Co-curricular & Extra-curricular Activities -->
-                <div id="activitiesTab" class="tab-content hidden">
+                <!-- Tab 2: Higher Studies -->
+                <div id="higherStudiesTab" class="tab-content hidden">
                     <section class="form-section">
                         <div class="section-header">
-                            <h2>Co-curricular & Extra-curricular Activities</h2>
-                            <button type="button" id="addActivityBtn" class="secondary-btn">+ Add Entry</button>
+                            <h2>Higher Studies</h2>
+                            <button type="button" id="addHigherStudiesBtn" class="secondary-btn">+ Add Entry</button>
                         </div>
-                        <p class="helper-text">Choose the activity type and date. Add award/achievement if applicable.</p>
-                        <div id="activitiesContainer">
-                            <!-- Activity blocks will be added here -->
-                        </div>
+                        <div id="higherStudiesContainer"></div>
                     </section>
                 </div>
 
-                <!-- Tab 3: Awards Won by Students -->
+                <!-- Tab 3: Internship Official -->
+                <div id="officialInternshipsTab" class="tab-content hidden">
+                    <section class="form-section">
+                        <div class="section-header">
+                            <h2>Internship Official</h2>
+                            <button type="button" id="addOfficialInternshipBtn" class="secondary-btn">+ Add Entry</button>
+                        </div>
+                        <div id="officialInternshipsContainer"></div>
+                    </section>
+                </div>
+
+                <!-- Tab 4: Internship Personal -->
+                <div id="personalInternshipsTab" class="tab-content hidden">
+                    <section class="form-section">
+                        <div class="section-header">
+                            <h2>Internship Personal</h2>
+                            <button type="button" id="addPersonalInternshipBtn" class="secondary-btn">+ Add Entry</button>
+                        </div>
+                        <div id="personalInternshipsContainer"></div>
+                    </section>
+                </div>
+
+                <!-- Tab 5: Papers Publication -->
+                <div id="publishedPapersTab" class="tab-content hidden">
+                    <section class="form-section">
+                        <div class="section-header">
+                            <h2>Published Journal Papers / Conference</h2>
+                            <button type="button" id="addPublishedPapersBtn" class="secondary-btn">+ Add Entry</button>
+                        </div>
+                        <div id="publishedPapersContainer"></div>
+                    </section>
+                </div>
+
+                <!-- Tab 6: Award Data -->
                 <div id="awardsTab" class="tab-content hidden">
                     <section class="form-section">
                         <div class="section-header">
-                            <h2>Awards Won by Students</h2>
+                            <h2>Award Data</h2>
                             <button type="button" id="addAwardBtn" class="secondary-btn">+ Add Entry</button>
                         </div>
-                        <p class="helper-text">Enter event + award/position and upload proof.</p>
-                        <div id="awardsContainer">
-                            <!-- Award blocks will be added here -->
-                        </div>
+                        <div id="awardsContainer"></div>
                     </section>
                 </div>
 
-                <!-- Tab 4: Competitive Examinations -->
-                <div id="competitiveExamsTab" class="tab-content hidden">
+                <!-- Tab 7: Event Data -->
+                <div id="eventsTab" class="tab-content hidden">
                     <section class="form-section">
                         <div class="section-header">
-                            <h2>Competitive Examinations</h2>
-                            <button type="button" id="addExamBtn" class="secondary-btn">+ Add Entry</button>
+                            <h2>Event Data</h2>
+                            <button type="button" id="addEventBtn" class="secondary-btn">+ Add Entry</button>
                         </div>
-                        <p class="helper-text">If you have a scorecard or hall ticket, upload it as proof.</p>
-                        <div id="competitiveExamsContainer">
-                            <!-- Exam blocks will be added here -->
-                        </div>
+                        <div id="eventsContainer"></div>
                     </section>
                 </div>
 
-                <!-- Tab 5: Industrial Visit -->
-                <div id="industrialVisitsTab" class="tab-content hidden">
-                    <section class="form-section">
-                        <div class="section-header">
-                            <h2>Industrial Visit</h2>
-                            <button type="button" id="addIndustrialVisitBtn" class="secondary-btn">+ Add Entry</button>
-                        </div>
-                        <p class="helper-text">One entry per company visit. Mention area/purpose and number of students.</p>
-                        <div id="industrialVisitsContainer">
-                            <!-- Industrial visit blocks will be added here -->
-                        </div>
-                    </section>
-                </div>
 
-                <!-- Tab 6: Short Term Training / Mini Project / In-Plant Training -->
-                <div id="trainingsTab" class="tab-content hidden">
-                    <section class="form-section">
-                        <div class="section-header">
-                            <h2>Short Term Training / Mini Project / In-Plant Training</h2>
-                            <button type="button" id="addTrainingBtn" class="secondary-btn">+ Add Entry</button>
-                        </div>
-                        <p class="helper-text">Enter company + period and training area/project title. Roll No is auto-filled.</p>
-                        <div id="trainingsContainer">
-                            <!-- Training blocks will be added here -->
-                        </div>
-                    </section>
-                </div>
 
                 <div class="form-footer">
                     <button type="submit" id="submitBtn">Submit All Records</button>

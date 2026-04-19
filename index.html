@@ -25,7 +25,7 @@
                 <button type="button" class="tab-btn" data-tab="personalInternships">6. Personal Internship</button>
                 <button type="button" class="tab-btn" data-tab="placementOffers">7. Placement</button>
                 <button type="button" class="tab-btn" data-tab="higherStudies">8. Higher Studies</button>
-                <button type="button" class="tab-btn" data-tab="publishedPapers">9. Papers</button>
+                <button type="button" class="tab-btn" data-tab="publishedPapers">9. Research paper</button>
             </nav>
         </header>
 
@@ -46,6 +46,20 @@
                             <label for="studentEmail">Email ID</label>
                             <input type="email" id="studentEmail" readonly placeholder="Auto-generated email">
                         </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="personalEmail">Personal Email ID</label>
+                            <input type="email" id="personalEmail" required placeholder="Enter personal email">
+                        </div>
+                        <div class="form-group">
+                            <label for="studentPhone">Phone Number</label>
+                            <input type="tel" id="studentPhone" required placeholder="Enter phone number">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 15px;">
+                        <label for="studentAddress">Current Address</label>
+                        <textarea id="studentAddress" required placeholder="Enter your full postal address" rows="2" style="font-family: inherit; width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px;"></textarea>
                     </div>
                 </section>
 
@@ -141,7 +155,7 @@
                 <div id="publishedPapersTab" class="tab-content hidden">
                     <section class="form-section">
                         <div class="section-header">
-                            <h2>Published Papers / Conference</h2>
+                            <h2>Research paper / Conference</h2>
                             <button type="button" id="addPublishedPapersBtn" class="secondary-btn">+ Add Entry</button>
                         </div>
                         <div id="publishedPapersContainer"></div>

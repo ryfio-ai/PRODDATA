@@ -23,7 +23,7 @@ const students = [
     "23P437 - RANJITH KUMAR K", "23P438 - AHAMED YASHICK M", "23P439 - KARTHIK A S"
 ];
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzrOyv1OfW-aJUN44JwkCoYGql2_OoT9bCbe-HO-v5CXZjBn2TgpfnS3KfiuvBeGS2Y/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx0BVTgC6nTfa5N8rzeZtluk0fMF83ud_0B4gjMCwIohjjIi1LViEiBGvGXG8MSnbTh/exec";
 
 const ACTIVITY_TYPES = [
     "NCC", "General Quiz", "Marketing", "Engineering Quiz", "How Stuffs Works", 
@@ -140,7 +140,10 @@ function addEntryBlock(sectionKey, container, renderFn) {
     block.dataset.entryId = id;
     block.id = `${sectionKey}-${id}`;
     
-    block.innerHTML = `<button type="button" class="remove-activity-btn">&times;</button>${renderFn(id)} ${renderProofUpload(id)}`;
+    const isInternship = sectionKey.toLowerCase().includes('internship');
+    const proofHtml = isInternship ? renderInternshipProofUpload(id) : renderProofUpload(id);
+    
+    block.innerHTML = `<button type="button" class="remove-activity-btn">&times;</button>${renderFn(id)} ${proofHtml}`;
 
     block.querySelector('.remove-activity-btn').addEventListener('click', () => block.remove());
     block.querySelectorAll('.file-input').forEach(input => {
@@ -161,6 +164,28 @@ function renderProofUpload(id) {
                 <span class="file-msg">Choose files or drag here</span>
             </div>
             <div class="file-info"></div>
+        </div>`;
+}
+
+function renderInternshipProofUpload(id) {
+    return `
+        <div class="form-row">
+            <div class="form-group file-upload-group">
+                <label>Offer Letter (Max 5MB)</label>
+                <div class="file-drop-area">
+                    <input type="file" class="file-input" data-label="Offer" accept=".pdf,.jpg,.jpeg,.png">
+                    <span class="file-msg">Choose file or drag here</span>
+                </div>
+                <div class="file-info"></div>
+            </div>
+            <div class="form-group file-upload-group">
+                <label>Completion Certificate (Max 5MB)</label>
+                <div class="file-drop-area">
+                    <input type="file" class="file-input" data-label="Certificate" accept=".pdf,.jpg,.jpeg,.png">
+                    <span class="file-msg">Choose file or drag here</span>
+                </div>
+                <div class="file-info"></div>
+            </div>
         </div>`;
 }
 
@@ -339,9 +364,12 @@ async function collectAllData() {
     const sel = document.getElementById('studentSelect').value;
     const [rollNo, name] = sel.split(' - ');
     const email = document.getElementById('studentEmail').value;
+    const personalEmail = document.getElementById('personalEmail').value;
+    const phone = document.getElementById('studentPhone').value;
+    const address = document.getElementById('studentAddress').value;
 
     return {
-        student: { rollNo, name, email },
+        student: { rollNo, name, email, personalEmail, phone, address },
         visitsAbroad: await collectSection('visitsAbroad', id => ({ place: val(`vaPlace-${id}`), from: val(`vaFrom-${id}`), to: val(`vaTo-${id}`), purpose: val(`vaPurpose-${id}`) })),
         activities: await collectSection('activities', id => ({ semester: val(`actSem-${id}`), nature: val(`actType-${id}`) === 'Other' ? val(`actTypeOther-${id}`) : val(`actType-${id}`), date: val(`actDate-${id}`), award: val(`actAward-${id}`) })),
         awards: await collectSection('awards', id => ({ semester: val(`awSem-${id}`), pos: val(`awPos-${id}`), by: val(`awBy-${id}`), date: val(`awDate-${id}`) })),
@@ -363,8 +391,15 @@ async function collectSection(key, mapFn) {
         const id = b.dataset.entryId;
         const entry = mapFn(id);
         const files = [];
-        for (let f of b.querySelector('.file-input').files) {
-            files.push({ base64: await toBase64(f), type: f.type, name: f.name });
+        for (let input of b.querySelectorAll('.file-input')) {
+            const label = input.dataset.label ? `${input.dataset.label}_` : "";
+            for (let f of input.files) {
+                files.push({ 
+                    base64: await toBase64(f), 
+                    type: f.type, 
+                    name: label + f.name 
+                });
+            }
         }
         data.push({...entry, files});
     }

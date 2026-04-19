@@ -10,7 +10,7 @@ const ROOT_DRIVE_FOLDER_ID = "1A1Fxof5ZGjihyuR2G8SPEDrQitplo2L6";
 function doGet(e) {
   if (e && e.parameter && e.parameter.action === "getSubmissions") {
     const ss = SpreadsheetApp.openById(TARGET_SPREADSHEET_ID);
-    const sheet = getOrCreateSheet(ss, "Submissions", ["Roll No", "Timestamp"]);
+    const sheet = getOrCreateSheet(ss, "Submissions", ["Roll No", "Timestamp", "Name", "Personal Email", "Phone No", "Address"]);
     const data = sheet.getDataRange().getValues();
     const submittedRolls = data.slice(1).map(row => String(row[0]));
     return ContentService.createTextOutput(JSON.stringify({ success: true, data: submittedRolls }))
@@ -33,53 +33,53 @@ function doPost(e) {
     const timestamp = new Date();
 
     // 1. Visits Abroad
-    writeSection(ss, "Visits_Abroad", ["Timestamp", "Roll No", "Name", "Place of Visit", "Period From", "Period To", "Purpose", "Proof Link"], 
-      student, timestamp, data.visitsAbroad, (entry, proof) => [timestamp, student.rollNo, student.name, entry.place, entry.from, entry.to, entry.purpose, proof], 
+    writeSection(ss, "Visits_Abroad", ["Timestamp", "Roll No", "Name", "Personal Email", "Phone No", "Address", "Place of Visit", "Period From", "Period To", "Purpose", "Proof Link"], 
+      student, timestamp, data.visitsAbroad, (entry, proof) => [timestamp, student.rollNo, student.name, student.personalEmail, student.phone, student.address, entry.place, entry.from, entry.to, entry.purpose, proof], 
       "Visits Abroad", e => e.place, e => "N/A");
 
     // 2. Activities
-    writeSection(ss, "Activities", ["Timestamp", "Roll No", "Name", "Semester", "Nature of Activity", "Date", "Award/Achievement", "Proof Link"], 
-      student, timestamp, data.activities, (entry, proof) => [timestamp, student.rollNo, student.name, entry.semester, entry.nature, entry.date, entry.award, proof], 
+    writeSection(ss, "Activities", ["Timestamp", "Roll No", "Name", "Personal Email", "Phone No", "Address", "Semester", "Nature of Activity", "Date", "Award/Achievement", "Proof Link"], 
+      student, timestamp, data.activities, (entry, proof) => [timestamp, student.rollNo, student.name, student.personalEmail, student.phone, student.address, entry.semester, entry.nature, entry.date, entry.award, proof], 
       "Activities", e => e.nature, e => e.semester);
 
     // 3. Awards
-    writeSection(ss, "Awards", ["Timestamp", "Roll No", "Name", "Semester", "Award/Position", "Awarded By", "Date", "Proof Link"], 
-      student, timestamp, data.awards, (entry, proof) => [timestamp, student.rollNo, student.name, entry.semester, entry.pos, entry.by, entry.date, proof], 
+    writeSection(ss, "Awards", ["Timestamp", "Roll No", "Name", "Personal Email", "Phone No", "Address", "Semester", "Award/Position", "Awarded By", "Date", "Proof Link"], 
+      student, timestamp, data.awards, (entry, proof) => [timestamp, student.rollNo, student.name, student.personalEmail, student.phone, student.address, entry.semester, entry.pos, entry.by, entry.date, proof], 
       "Awards", entry => entry.pos, e => e.semester);
 
     // 4. Exams
-    writeSection(ss, "Competitive_Exams", ["Timestamp", "Roll No", "Name", "Exam", "Appeared", "Qualified", "Score", "Proof Link"], 
-      student, timestamp, data.exams, (entry, proof) => [timestamp, student.rollNo, student.name, entry.name, entry.appeared, entry.qualified, entry.score, proof], 
+    writeSection(ss, "Competitive_Exams", ["Timestamp", "Roll No", "Name", "Personal Email", "Phone No", "Address", "Exam", "Appeared", "Qualified", "Score", "Proof Link"], 
+      student, timestamp, data.exams, (entry, proof) => [timestamp, student.rollNo, student.name, student.personalEmail, student.phone, student.address, entry.name, entry.appeared, entry.qualified, entry.score, proof], 
       "Competitive Exams", e => e.name, e => "N/A");
 
     // 5. Official Internship
-    writeSection(ss, "Official_Internships", ["Timestamp", "Roll No", "Name", "Semester", "Company", "Period From", "Period To", "Area/Project", "Proof Link"], 
-      student, timestamp, data.officialInternships, (entry, proof) => [timestamp, student.rollNo, student.name, entry.semester, entry.company, entry.from, entry.to, entry.project, proof], 
+    writeSection(ss, "Official_Internships", ["Timestamp", "Roll No", "Name", "Personal Email", "Phone No", "Address", "Semester", "Company", "Period From", "Period To", "Area/Project", "Proof Link"], 
+      student, timestamp, data.officialInternships, (entry, proof) => [timestamp, student.rollNo, student.name, student.personalEmail, student.phone, student.address, entry.semester, entry.company, entry.from, entry.to, entry.project, proof], 
       "Official Internship", e => e.company, e => e.semester);
 
     // 6. Personal Internship
-    writeSection(ss, "Personal_Internships", ["Timestamp", "Roll No", "Name", "Semester", "Company", "Period From", "Period To", "Area/Project", "Proof Link"], 
-      student, timestamp, data.personalInternships, (entry, proof) => [timestamp, student.rollNo, student.name, entry.semester, entry.company, entry.from, entry.to, entry.project, proof], 
+    writeSection(ss, "Personal_Internships", ["Timestamp", "Roll No", "Name", "Personal Email", "Phone No", "Address", "Semester", "Company", "Period From", "Period To", "Area/Project", "Proof Link"], 
+      student, timestamp, data.personalInternships, (entry, proof) => [timestamp, student.rollNo, student.name, student.personalEmail, student.phone, student.address, entry.semester, entry.company, entry.from, entry.to, entry.project, proof], 
       "Personal Internship", e => e.company, e => e.semester);
 
     // 7. Placement
-    writeSection(ss, "Placement_Offers", ["Timestamp", "Roll No", "Name", "Semester", "Company", "Role", "Package (LPA)", "Proof Link"], 
-      student, timestamp, data.placementOffers, (entry, proof) => [timestamp, student.rollNo, student.name, entry.semester, entry.company, entry.role, entry.package, proof], 
+    writeSection(ss, "Placement_Offers", ["Timestamp", "Roll No", "Name", "Personal Email", "Phone No", "Address", "Semester", "Company", "Role", "Package (LPA)", "Proof Link"], 
+      student, timestamp, data.placementOffers, (entry, proof) => [timestamp, student.rollNo, student.name, student.personalEmail, student.phone, student.address, entry.semester, entry.company, entry.role, entry.package, proof], 
       "Placement", e => e.company, e => e.semester);
 
     // 8. Higher Studies
-    writeSection(ss, "Higher_Studies", ["Timestamp", "Roll No", "Name", "Institution", "Programme", "Proof Link"], 
-      student, timestamp, data.higherStudies, (entry, proof) => [timestamp, student.rollNo, student.name, entry.institution, entry.programme, proof], 
+    writeSection(ss, "Higher_Studies", ["Timestamp", "Roll No", "Name", "Personal Email", "Phone No", "Address", "Institution", "Programme", "Proof Link"], 
+      student, timestamp, data.higherStudies, (entry, proof) => [timestamp, student.rollNo, student.name, student.personalEmail, student.phone, student.address, entry.institution, entry.programme, proof], 
       "Higher Studies", e => e.institution, e => "N/A");
 
-    // 9. Published Papers
-    writeSection(ss, "Published_Papers", ["Timestamp", "Roll No", "Name", "Semester", "Guide", "Title", "Journal/Conf", "Type", "Level", "Month/Year", "ISBN", "DOI", "Proof Link"], 
-      student, timestamp, data.publishedPapers, (entry, proof) => [timestamp, student.rollNo, student.name, entry.semester, entry.guide, entry.title, entry.conf, entry.type, entry.level, entry.date, entry.isbn, entry.doi, proof], 
-      "Published Papers", e => e.title, e => e.semester);
+    // 9. Research Papers
+    writeSection(ss, "Research_Papers", ["Timestamp", "Roll No", "Name", "Personal Email", "Phone No", "Address", "Semester", "Guide", "Title", "Journal/Conf", "Type", "Level", "Month/Year", "ISBN", "DOI", "Proof Link"], 
+      student, timestamp, data.publishedPapers, (entry, proof) => [timestamp, student.rollNo, student.name, student.personalEmail, student.phone, student.address, entry.semester, entry.guide, entry.title, entry.conf, entry.type, entry.level, entry.date, entry.isbn, entry.doi, proof], 
+      "Research Papers", e => e.title, e => e.semester);
 
     // Track submission completion
-    const subSheet = getOrCreateSheet(ss, "Submissions", ["Roll No", "Timestamp"]);
-    subSheet.appendRow([student.rollNo, timestamp]);
+    const subSheet = getOrCreateSheet(ss, "Submissions", ["Roll No", "Timestamp", "Name", "Personal Email", "Phone No", "Address"]);
+    subSheet.appendRow([student.rollNo, timestamp, student.name, student.personalEmail, student.phone, student.address]);
 
     return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
   } catch (err) {

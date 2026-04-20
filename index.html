@@ -3,188 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PRODDATA 2022-2026 | Student Portal</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Student Activity Portal | PRODDATA 2022-2026</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=1.0.2">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="logo">
-                <h1>PRODDATA 2022-2026</h1>
-                <p>Department Student Portal</p>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>PRODDATA</h1>
+                <p>2022-2026 Student Portal</p>
             </div>
-            <nav class="form-tabs">
-                <button type="button" class="tab-btn active" data-tab="visitsAbroad">1. Visits Abroad</button>
-                <button type="button" class="tab-btn" data-tab="activities">2. Activities</button>
-                <button type="button" class="tab-btn" data-tab="awards">3. Awards</button>
-                <button type="button" class="tab-btn" data-tab="exams">4. Competitive Exams</button>
-                <button type="button" class="tab-btn" data-tab="officialInternships">5. Official Internship</button>
-                <button type="button" class="tab-btn" data-tab="personalInternships">6. Personal Internship</button>
-                <button type="button" class="tab-btn" data-tab="placementOffers">7. Placement</button>
-                <button type="button" class="tab-btn" data-tab="higherStudies">8. Higher Studies</button>
-                <button type="button" class="tab-btn" data-tab="publishedPapers">9. Research paper</button>
+            
+            <nav class="nav-menu">
+                <button type="button" class="nav-item active" data-tab="studentProfile">
+                    <i class="fas fa-user-circle"></i> 0. Student Profile
+                </button>
+                <button type="button" class="nav-item" data-tab="visitsAbroad">
+                    <i class="fas fa-plane-departure"></i> 1. Visits Abroad
+                </button>
+                <button type="button" class="nav-item" data-tab="activities">
+                    <i class="fas fa-users"></i> 2. Activities
+                </button>
+                <button type="button" class="nav-item" data-tab="awards">
+                    <i class="fas fa-award"></i> 3. Awards Won
+                </button>
+                <button type="button" class="nav-item" data-tab="exams">
+                    <i class="fas fa-user-graduate"></i> 4. Comp. Exams
+                </button>
+                <button type="button" class="nav-item" data-tab="officialInternships">
+                    <i class="fas fa-building-user"></i> 5. Official Internship
+                </button>
+                <button type="button" class="nav-item" data-tab="personalInternships">
+                    <i class="fas fa-briefcase"></i> 6. Personal Internship
+                </button>
+                <button type="button" class="nav-item" data-tab="placementOffers">
+                    <i class="fas fa-id-card"></i> 7. Placement Offers
+                </button>
+                <button type="button" class="nav-item" data-tab="higherStudies">
+                    <i class="fas fa-university"></i> 8. Higher Studies
+                </button>
+                <button type="button" class="nav-item" data-tab="publishedPapers">
+                    <i class="fas fa-file-invoice"></i> 9. Research Paper
+                </button>
             </nav>
-        </header>
 
-        <main>
-            <form id="mainForm" class="card">
-                <!-- Student Info (Always Visible) -->
-                <section class="form-section">
-                    <h2>Student Information</h2>
-                    <p class="helper-text">Select your roll number to auto-fill your email and required fields in each entry.</p>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="studentSelect">Roll Number & Name</label>
-                            <select id="studentSelect" required>
-                                <option value="" disabled selected>Select your Roll Number</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="studentEmail">Email ID</label>
-                            <input type="email" id="studentEmail" readonly placeholder="Auto-generated email">
+            <div class="sidebar-footer">
+                <p style="font-size: 11px; opacity: 0.7;">Department of Production Engineering</p>
+                <p style="font-size: 10px; opacity: 0.4; margin-top: 4px; font-style: italic;">Developed by Sathish P</p>
+            </div>
+        </aside>
+
+        <!-- Main Viewport -->
+        <div class="main-viewport">
+            <header class="top-bar">
+                <div class="page-title">
+                    <h2 id="currentTabTitle">Student Profile</h2>
+                </div>
+                <div class="status-indicator">
+                    <span id="saveStatus" style="font-size: 0.8rem; color: var(--text-muted);">
+                        <i class="fas fa-circle-check"></i> Ready
+                    </span>
+                </div>
+            </header>
+
+            <form id="mainForm" novalidate>
+                <div id="tabContentContainer">
+                    <!-- Tab 0: Student Profile -->
+                    <div id="studentProfileTab" class="tab-content">
+                        <div class="card">
+                            <div class="form-section-title">
+                                <i class="fas fa-user-circle"></i> Student Profile
+                            </div>
+                            <p class="helper-text" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">
+                                Select your roll number to auto-populate your academic identity.
+                            </p>
+                            
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Roll Number & Name</label>
+                                    <select id="studentSelect" class="form-control">
+                                        <option value="" disabled selected>Select Roll Number</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Email Address</label>
+                                    <input type="email" id="studentEmail" class="form-control" readonly placeholder="Institutional Email">
+                                </div>
+                            </div>
+
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label>Personal Email</label>
+                                    <input type="email" id="personalEmail" class="form-control" placeholder="example@gmail.com">
+                                </div>
+                                <div class="form-group">
+                                    <label>Contact Number</label>
+                                    <input type="tel" id="studentPhone" class="form-control" placeholder="+91 XXX XXX XXXX">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Current Address</label>
+                                <textarea id="studentAddress" class="form-control" placeholder="Enter full address..." rows="2"></textarea>
+                            </div>
+
+                            <div class="step-nav-buttons mt-8 flex-end">
+                                <button type="button" class="primary-btn next-btn" data-next="visitsAbroad">Next: Visits Abroad <i class="fas fa-arrow-right"></i></button>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="personalEmail">Personal Email ID</label>
-                            <input type="email" id="personalEmail" required placeholder="Enter personal email">
-                        </div>
-                        <div class="form-group">
-                            <label for="studentPhone">Phone Number</label>
-                            <input type="tel" id="studentPhone" required placeholder="Enter phone number">
+
+                    <!-- Tab 1: Visits Abroad -->
+                    <div id="visitsAbroadTab" class="tab-content hidden">
+                        <div class="card">
+                            <div class="section-header">
+                                <div class="form-section-title"><i class="fas fa-plane"></i> Visits Abroad Entries</div>
+                                <button type="button" id="addVisitsAbroadBtn" class="secondary-btn"><i class="fas fa-plus"></i> Add</button>
+                            </div>
+                            <div id="visitsAbroadContainer"></div>
+                            
+                            <div class="step-nav-buttons mt-8" style="display: flex; justify-content: space-between;">
+                                <button type="button" class="secondary-btn prev-btn" data-prev="studentProfile"><i class="fas fa-arrow-left"></i> Previous</button>
+                                <button type="button" class="primary-btn next-btn" data-next="activities">Next: Activities <i class="fas fa-arrow-right"></i></button>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-group" style="margin-top: 15px;">
-                        <label for="studentAddress">Current Address</label>
-                        <textarea id="studentAddress" required placeholder="Enter your full postal address" rows="2" style="font-family: inherit; width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px;"></textarea>
+
+                    <!-- Tab 2: Activities -->
+                    <div id="activitiesTab" class="tab-content hidden">
+                        <div class="card">
+                            <div class="section-header">
+                                <div class="form-section-title"><i class="fas fa-users-viewfinder"></i> Co-curricular & Extra</div>
+                                <button type="button" id="addActivitiesBtn" class="secondary-btn"><i class="fas fa-plus"></i> Add</button>
+                            </div>
+                            <div id="activitiesContainer"></div>
+                            
+                            <div class="step-nav-buttons mt-8" style="display: flex; justify-content: space-between;">
+                                <button type="button" class="secondary-btn prev-btn" data-prev="visitsAbroad"><i class="fas fa-arrow-left"></i> Previous</button>
+                                <button type="button" class="primary-btn next-btn" data-next="awards">Next: Awards <i class="fas fa-arrow-right"></i></button>
+                            </div>
+                        </div>
                     </div>
-                </section>
 
-                <!-- Tab 1: Visits Abroad -->
-                <div id="visitsAbroadTab" class="tab-content">
-                    <section class="form-section">
-                        <div class="section-header">
-                            <h2>Visits Abroad</h2>
-                            <button type="button" id="addVisitsAbroadBtn" class="secondary-btn">+ Add Entry</button>
+                    <!-- Tab 3: Awards -->
+                    <div id="awardsTab" class="tab-content hidden">
+                        <div class="card">
+                            <div class="section-header">
+                                <div class="form-section-title"><i class="fas fa-medal"></i> Awards & Recognition</div>
+                                <button type="button" id="addAwardsBtn" class="secondary-btn"><i class="fas fa-plus"></i> Add</button>
+                            </div>
+                            <div id="awardsContainer"></div>
+                            
+                            <div class="step-nav-buttons mt-8" style="display: flex; justify-content: space-between;">
+                                <button type="button" class="secondary-btn prev-btn" data-prev="activities"><i class="fas fa-arrow-left"></i> Previous</button>
+                                <button type="button" class="primary-btn next-btn" data-next="exams">Next: Exams <i class="fas fa-arrow-right"></i></button>
+                            </div>
                         </div>
-                        <div id="visitsAbroadContainer"></div>
-                    </section>
-                </div>
+                    </div>
 
-                <!-- Tab 2: Activities -->
-                <div id="activitiesTab" class="tab-content hidden">
-                    <section class="form-section">
-                        <div class="section-header">
-                            <h2>Activities (Co-curricular & Extra)</h2>
-                            <button type="button" id="addActivitiesBtn" class="secondary-btn">+ Add Entry</button>
+                    <!-- Tab 4: Exams -->
+                    <div id="examsTab" class="tab-content hidden">
+                        <div class="card">
+                            <div class="section-header">
+                                <div class="form-section-title"><i class="fas fa-pen-nib"></i> Competitive Examinations</div>
+                                <button type="button" id="addExamsBtn" class="secondary-btn"><i class="fas fa-plus"></i> Add</button>
+                            </div>
+                            <div id="examsContainer"></div>
+                            
+                            <div class="step-nav-buttons mt-8" style="display: flex; justify-content: space-between;">
+                                <button type="button" class="secondary-btn prev-btn" data-prev="awards"><i class="fas fa-arrow-left"></i> Previous</button>
+                                <button type="button" class="primary-btn next-btn" data-next="officialInternships">Next: Internships <i class="fas fa-arrow-right"></i></button>
+                            </div>
                         </div>
-                        <div id="activitiesContainer"></div>
-                    </section>
-                </div>
+                    </div>
 
-                <!-- Tab 3: Awards -->
-                <div id="awardsTab" class="tab-content hidden">
-                    <section class="form-section">
-                        <div class="section-header">
-                            <h2>Awards Won</h2>
-                            <button type="button" id="addAwardsBtn" class="secondary-btn">+ Add Entry</button>
+                    <!-- Tab 5: Official Internship -->
+                    <div id="officialInternshipsTab" class="tab-content hidden">
+                        <div class="card">
+                            <div class="section-header">
+                                <div class="form-section-title"><i class="fas fa-building-columns"></i> Official Internships</div>
+                                <button type="button" id="addOfficialInternshipsBtn" class="secondary-btn"><i class="fas fa-plus"></i> Add</button>
+                            </div>
+                            <div id="officialInternshipsContainer"></div>
+                            
+                            <div class="step-nav-buttons mt-8" style="display: flex; justify-content: space-between;">
+                                <button type="button" class="secondary-btn prev-btn" data-prev="exams"><i class="fas fa-arrow-left"></i> Previous</button>
+                                <button type="button" class="primary-btn next-btn" data-next="personalInternships">Next: Personal Internships <i class="fas fa-arrow-right"></i></button>
+                            </div>
                         </div>
-                        <div id="awardsContainer"></div>
-                    </section>
-                </div>
+                    </div>
 
-                <!-- Tab 4: Competitive Exams -->
-                <div id="examsTab" class="tab-content hidden">
-                    <section class="form-section">
-                        <div class="section-header">
-                            <h2>Competitive Examinations</h2>
-                            <button type="button" id="addExamsBtn" class="secondary-btn">+ Add Entry</button>
+                    <!-- Tab 6: Personal Internship -->
+                    <div id="personalInternshipsTab" class="tab-content hidden">
+                        <div class="card">
+                            <div class="section-header">
+                                <div class="form-section-title"><i class="fas fa-user-geometric"></i> Personal Internships</div>
+                                <button type="button" id="addPersonalInternshipsBtn" class="secondary-btn"><i class="fas fa-plus"></i> Add</button>
+                            </div>
+                            <div id="personalInternshipsContainer"></div>
+                            
+                            <div class="step-nav-buttons mt-8" style="display: flex; justify-content: space-between;">
+                                <button type="button" class="secondary-btn prev-btn" data-prev="officialInternships"><i class="fas fa-arrow-left"></i> Previous</button>
+                                <button type="button" class="primary-btn next-btn" data-next="placementOffers">Next: Placements <i class="fas fa-arrow-right"></i></button>
+                            </div>
                         </div>
-                        <div id="examsContainer"></div>
-                    </section>
-                </div>
+                    </div>
 
-                <!-- Tab 5: Official Internship -->
-                <div id="officialInternshipsTab" class="tab-content hidden">
-                    <section class="form-section">
-                        <div class="section-header">
-                            <h2>Official Internship</h2>
-                            <button type="button" id="addOfficialInternshipsBtn" class="secondary-btn">+ Add Entry</button>
+                    <!-- Tab 7: Placement -->
+                    <div id="placementOffersTab" class="tab-content hidden">
+                        <div class="card">
+                            <div class="section-header">
+                                <div class="form-section-title"><i class="fas fa-briefcase"></i> Placement Offers</div>
+                                <button type="button" id="addPlacementOffersBtn" class="secondary-btn"><i class="fas fa-plus"></i> Add</button>
+                            </div>
+                            <div id="placementOffersContainer"></div>
+                            
+                            <div class="step-nav-buttons mt-8" style="display: flex; justify-content: space-between;">
+                                <button type="button" class="secondary-btn prev-btn" data-prev="personalInternships"><i class="fas fa-arrow-left"></i> Previous</button>
+                                <button type="button" class="primary-btn next-btn" data-next="higherStudies">Next: Higher Studies <i class="fas fa-arrow-right"></i></button>
+                            </div>
                         </div>
-                        <div id="officialInternshipsContainer"></div>
-                    </section>
-                </div>
+                    </div>
 
-                <!-- Tab 6: Personal Internship -->
-                <div id="personalInternshipsTab" class="tab-content hidden">
-                    <section class="form-section">
-                        <div class="section-header">
-                            <h2>Personal Internship</h2>
-                            <button type="button" id="addPersonalInternshipsBtn" class="secondary-btn">+ Add Entry</button>
+                    <!-- Tab 8: Higher Studies -->
+                    <div id="higherStudiesTab" class="tab-content hidden">
+                        <div class="card">
+                            <div class="section-header">
+                                <div class="form-section-title"><i class="fas fa-graduation-cap"></i> Higher Studies</div>
+                                <button type="button" id="addHigherStudiesBtn" class="secondary-btn"><i class="fas fa-plus"></i> Add</button>
+                            </div>
+                            <div id="higherStudiesContainer"></div>
+                            
+                            <div class="step-nav-buttons mt-8" style="display: flex; justify-content: space-between;">
+                                <button type="button" class="secondary-btn prev-btn" data-prev="placementOffers"><i class="fas fa-arrow-left"></i> Previous</button>
+                                <button type="button" class="primary-btn next-btn" data-next="publishedPapers">Next: Research Papers <i class="fas fa-arrow-right"></i></button>
+                            </div>
                         </div>
-                        <div id="personalInternshipsContainer"></div>
-                    </section>
-                </div>
+                    </div>
 
-                <!-- Tab 7: Placement -->
-                <div id="placementOffersTab" class="tab-content hidden">
-                    <section class="form-section">
-                        <div class="section-header">
-                            <h2>Placement Offers</h2>
-                            <button type="button" id="addPlacementOffersBtn" class="secondary-btn">+ Add Entry</button>
+                    <!-- Tab 9: Papers -->
+                    <div id="publishedPapersTab" class="tab-content hidden">
+                        <div class="card">
+                            <div class="section-header">
+                                <div class="form-section-title"><i class="fas fa-scroll"></i> Research & Conferences</div>
+                                <button type="button" id="addPublishedPapersBtn" class="secondary-btn"><i class="fas fa-plus"></i> Add</button>
+                            </div>
+                            <div id="publishedPapersContainer"></div>
+                            
+                            <div class="step-nav-buttons mt-8" style="display: flex; justify-content: space-between;">
+                                <button type="button" class="secondary-btn prev-btn" data-prev="higherStudies"><i class="fas fa-arrow-left"></i> Previous</button>
+                                <button type="submit" id="submitBtn" class="primary-btn">
+                                    <i class="fas fa-cloud-upload-alt"></i> Finalize & Submit All Records
+                                </button>
+                            </div>
                         </div>
-                        <div id="placementOffersContainer"></div>
-                    </section>
-                </div>
-
-                <!-- Tab 8: Higher Studies -->
-                <div id="higherStudiesTab" class="tab-content hidden">
-                    <section class="form-section">
-                        <div class="section-header">
-                            <h2>Higher Studies</h2>
-                            <button type="button" id="addHigherStudiesBtn" class="secondary-btn">+ Add Entry</button>
-                        </div>
-                        <div id="higherStudiesContainer"></div>
-                    </section>
-                </div>
-
-                <!-- Tab 9: Papers -->
-                <div id="publishedPapersTab" class="tab-content hidden">
-                    <section class="form-section">
-                        <div class="section-header">
-                            <h2>Research paper / Conference</h2>
-                            <button type="button" id="addPublishedPapersBtn" class="secondary-btn">+ Add Entry</button>
-                        </div>
-                        <div id="publishedPapersContainer"></div>
-                    </section>
-                </div>
-
-
-
-                <div class="form-footer">
-                    <button type="submit" id="submitBtn">Submit All Records</button>
+                    </div>
                 </div>
             </form>
 
+            <!-- Overlays -->
             <div id="successOverlay" class="overlay hidden">
-                <div class="success-card">
-                    <div class="success-icon">✓</div>
-                    <h2>Submission Successful!</h2>
-                    <p>Your record has been logged in Google Sheets and Drive.</p>
-                    <button onclick="location.reload()">Submit Another</button>
+                <div class="success-modal">
+                    <div class="success-icon-wrap">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <h2 style="font-family: 'Outfit', sans-serif;">Submission Successful</h2>
+                    <p style="color: var(--text-muted); margin: 16px 0 32px;">Your records have been officially logged in the department database.</p>
+                    <button type="button" class="primary-btn" onclick="location.reload()">Return to Dashboard</button>
                 </div>
             </div>
 
             <div id="loadingOverlay" class="overlay hidden">
                 <div class="loader-content">
                     <div class="spinner"></div>
-                    <p>Uploading record... Please wait.</p>
+                    <p>Processing submission...</p>
                 </div>
             </div>
-        </main>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>

@@ -23,7 +23,7 @@ const students = [
     "23P437 - RANJITH KUMAR K", "23P438 - AHAMED YASHICK M", "23P439 - KARTHIK A S"
 ];
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx0BVTgC6nTfa5N8rzeZtluk0fMF83ud_0B4gjMCwIohjjIi1LViEiBGvGXG8MSnbTh/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyc8JJHZJBjyz0_oPL6fFu53ZBnRuH7eJ6DwtiODmg73BDWnEGZlhnIMfDC_Rsjfu3E/exec";
 
 const ACTIVITY_TYPES = [
     "NCC", "General Quiz", "Marketing", "Engineering Quiz", "How Stuffs Works", 
@@ -35,6 +35,19 @@ const ACTIVITY_TYPES = [
 
 const EXAM_TYPES = ["GATE", "CAT", "GRE", "IELTS", "TOEFL", "AFCAT", "CDS", "HAL", "Other"];
 const SEMESTERS = ["Semester 1", "Semester 2", "Semester 3", "Semester 4", "Semester 5", "Semester 6", "Semester 7", "Semester 8"];
+
+const TAB_TITLES = {
+    studentProfile: "Student Profile",
+    visitsAbroad: "Visits Abroad",
+    activities: "Activities (Co-curricular & Extra)",
+    awards: "Awards & Recognition",
+    exams: "Competitive Examinations",
+    officialInternships: "Official Internships",
+    personalInternships: "Personal Internships",
+    placementOffers: "Placement Offers",
+    higherStudies: "Higher Studies",
+    publishedPapers: "Research Papers & Conferences"
+};
 
 const sectionState = {
     visitsAbroad: { count: 0 },
@@ -51,6 +64,7 @@ const sectionState = {
 document.addEventListener('DOMContentLoaded', () => {
     initDynamicDropdown();
     initTabs();
+    initFlowNavigation();
     
     initDynamicSection('visitsAbroad', renderVisitAbroadBlock, 'addVisitsAbroadBtn', 'visitsAbroadContainer');
     initDynamicSection('activities', renderActivityBlock, 'addActivitiesBtn', 'activitiesContainer');
@@ -73,7 +87,6 @@ async function initDynamicDropdown() {
 
     let submittedRolls = [];
     try {
-        // Fetch list of roll numbers that already submitted
         const response = await fetch(`${SCRIPT_URL}?action=getSubmissions`);
         const result = await response.json();
         if (result.success) submittedRolls = result.data;
@@ -102,14 +115,46 @@ async function initDynamicDropdown() {
 }
 
 function initTabs() {
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    tabBtns.forEach(btn => {
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(btn => {
         btn.addEventListener('click', () => {
-            tabBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
             const tabId = btn.getAttribute('data-tab');
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
-            document.getElementById(tabId + 'Tab').classList.remove('hidden');
+            switchTab(tabId);
+        });
+    });
+}
+
+function switchTab(tabId) {
+    const navItems = document.querySelectorAll('.nav-item');
+    const titleEl = document.getElementById('currentTabTitle');
+    
+    // Update Sidebar
+    navItems.forEach(b => b.classList.remove('active'));
+    document.querySelector(`.nav-item[data-tab="${tabId}"]`)?.classList.add('active');
+    
+    // Update Header
+    titleEl.textContent = TAB_TITLES[tabId] || "Dashboard";
+    
+    // Switch Content
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+    document.getElementById(tabId + 'Tab').classList.remove('hidden');
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function initFlowNavigation() {
+    document.querySelectorAll('.next-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const nextTab = btn.getAttribute('data-next');
+            switchTab(nextTab);
+        });
+    });
+
+    document.querySelectorAll('.prev-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const prevTab = btn.getAttribute('data-prev');
+            switchTab(prevTab);
         });
     });
 }
@@ -135,7 +180,7 @@ function addEntryBlock(sectionKey, container, renderFn) {
     const id = state.count;
 
     const block = document.createElement('div');
-    block.className = 'activity-card entry-card';
+    block.className = 'entry-card';
     block.dataset.section = sectionKey;
     block.dataset.entryId = id;
     block.id = `${sectionKey}-${id}`;
@@ -143,11 +188,16 @@ function addEntryBlock(sectionKey, container, renderFn) {
     const isInternship = sectionKey.toLowerCase().includes('internship');
     const proofHtml = isInternship ? renderInternshipProofUpload(id) : renderProofUpload(id);
     
-    block.innerHTML = `<button type="button" class="remove-activity-btn">&times;</button>${renderFn(id)} ${proofHtml}`;
+    block.innerHTML = `
+        <button type="button" class="remove-btn" title="Remove Entry"><i class="fas fa-times"></i></button>
+        ${renderFn(id)} 
+        ${proofHtml}
+    `;
 
-    block.querySelector('.remove-activity-btn').addEventListener('click', () => block.remove());
-    block.querySelectorAll('.file-input').forEach(input => {
-        const infoEl = input.closest('.form-group').querySelector('.file-info');
+    block.querySelector('.remove-btn').addEventListener('click', () => block.remove());
+    
+    block.querySelectorAll('.file-input-hidden').forEach(input => {
+        const infoEl = input.closest('.file-drop-zone').querySelector('.file-info-text');
         input.addEventListener('change', () => handleFiles(input.files, infoEl, input));
     });
 
@@ -157,34 +207,43 @@ function addEntryBlock(sectionKey, container, renderFn) {
 
 function renderProofUpload(id) {
     return `
-        <div class="form-group file-upload-group">
-            <label>Offer Letter / Certificate (Max 5MB)</label>
-            <div class="file-drop-area">
-                <input type="file" class="file-input" multiple accept=".pdf,.jpg,.jpeg,.png">
-                <span class="file-msg">Choose files or drag here</span>
+        <div class="form-group mt-8">
+            <label>Support Documentation (Max 5MB)</label>
+            <div class="file-drop-zone">
+                <input type="file" class="file-input-hidden" multiple accept=".pdf,.jpg,.jpeg,.png">
+                <div class="file-label">
+                    <i class="fas fa-cloud-arrow-up" style="font-size: 1.5rem; color: var(--primary); margin-bottom: 8px;"></i><br>
+                    <span>Click to upload or drag & drop</span>
+                </div>
+                <div class="file-info-text"></div>
             </div>
-            <div class="file-info"></div>
         </div>`;
 }
 
 function renderInternshipProofUpload(id) {
     return `
-        <div class="form-row">
-            <div class="form-group file-upload-group">
-                <label>Offer Letter (Max 5MB)</label>
-                <div class="file-drop-area">
-                    <input type="file" class="file-input" data-label="Offer" accept=".pdf,.jpg,.jpeg,.png">
-                    <span class="file-msg">Choose file or drag here</span>
+        <div class="form-grid mt-8">
+            <div class="form-group">
+                <label>Offer Letter</label>
+                <div class="file-drop-zone">
+                    <input type="file" class="file-input-hidden" data-label="Offer" accept=".pdf,.jpg,.jpeg,.png">
+                    <div class="file-label">
+                        <i class="fas fa-file-contract"></i><br>
+                        <span>Attach Offer</span>
+                    </div>
+                    <div class="file-info-text"></div>
                 </div>
-                <div class="file-info"></div>
             </div>
-            <div class="form-group file-upload-group">
-                <label>Completion Certificate (Max 5MB)</label>
-                <div class="file-drop-area">
-                    <input type="file" class="file-input" data-label="Certificate" accept=".pdf,.jpg,.jpeg,.png">
-                    <span class="file-msg">Choose file or drag here</span>
+            <div class="form-group">
+                <label>Completion Certificate</label>
+                <div class="file-drop-zone">
+                    <input type="file" class="file-input-hidden" data-label="Certificate" accept=".pdf,.jpg,.jpeg,.png">
+                    <div class="file-label">
+                        <i class="fas fa-certificate"></i><br>
+                        <span>Attach Certificate</span>
+                    </div>
+                    <div class="file-info-text"></div>
                 </div>
-                <div class="file-info"></div>
             </div>
         </div>`;
 }
@@ -194,7 +253,7 @@ function renderSemesterDropdown(id, fieldId) {
     return `
         <div class="form-group">
             <label>Semester</label>
-            <select id="${fieldId}-${id}" required>
+            <select id="${fieldId}-${id}" class="form-control">
                 <option value="" disabled selected>Select Semester</option>
                 ${options}
             </select>
@@ -204,161 +263,192 @@ function renderSemesterDropdown(id, fieldId) {
 // 1. Visits Abroad
 function renderVisitAbroadBlock(id) {
     return `
-        <div class="form-row">
-            <div class="form-group"><label>Name of Student</label><input type="text" data-prefill="name" readonly></div>
-            <div class="form-group"><label>Place of Visit</label><input type="text" id="vaPlace-${id}" required></div>
+        <div class="form-grid">
+            <div class="form-group"><label>Name of Student</label><input type="text" class="form-control" data-prefill="name" readonly></div>
+            <div class="form-group"><label>Place of Visit</label><input type="text" class="form-control" id="vaPlace-${id}"></div>
         </div>
-        <div class="form-row">
-            <div class="form-group"><label>Period From</label><input type="date" id="vaFrom-${id}" required></div>
-            <div class="form-group"><label>Period To</label><input type="date" id="vaTo-${id}" required></div>
+        <div class="form-grid">
+            <div class="form-group"><label>Period From</label><input type="date" class="form-control" id="vaFrom-${id}"></div>
+            <div class="form-group"><label>Period To</label><input type="date" class="form-control" id="vaTo-${id}"></div>
         </div>
-        <div class="form-group"><label>Purpose</label><input type="text" id="vaPurpose-${id}" required></div>`;
+        <div class="form-group"><label>Purpose</label><input type="text" class="form-control" id="vaPurpose-${id}" placeholder="e.g. Academic Summit, Research Project"></div>`;
 }
 
 // 2. Activities
 function renderActivityBlock(id) {
     const options = ACTIVITY_TYPES.map(a => `<option value="${a}">${a}</option>`).join('');
     return `
-        ${renderSemesterDropdown(id, 'actSem')}
-        <div class="form-row">
-            <div class="form-group">
-                <label>Nature of Activity</label>
-                <select id="actType-${id}" required onchange="this.nextElementSibling.classList.toggle('hidden', this.value !== 'Other')">
+        <div class="form-grid">
+            ${renderSemesterDropdown(id, 'actSem')}
+            <div class="form-group"><label>Nature of Activity</label>
+                <select id="actType-${id}" class="form-control" onchange="this.nextElementSibling.classList.toggle('hidden', this.value !== 'Other')">
                     <option value="" disabled selected>Select Activity</option>
                     ${options}
                 </select>
-                <input type="text" id="actTypeOther-${id}" class="hidden" placeholder="Specify other activity" style="margin-top:10px">
+                <input type="text" id="actTypeOther-${id}" class="form-control hidden mt-4" placeholder="Specify other activity">
             </div>
-            <div class="form-group"><label>Date</label><input type="date" id="actDate-${id}" required></div>
         </div>
-        <div class="form-group"><label>Award (if any)</label><input type="text" id="actAward-${id}" placeholder="e.g., Winner, Runner, Participant"></div>`;
+        <div class="form-grid">
+            <div class="form-group"><label>Date of Event</label><input type="date" class="form-control" id="actDate-${id}"></div>
+            <div class="form-group"><label>Award (if any)</label><input type="text" class="form-control" id="actAward-${id}" placeholder="e.g. Winner, Runner-up"></div>
+        </div>`;
 }
 
 // 3. Awards
 function renderAwardBlock(id) {
     return `
-        ${renderSemesterDropdown(id, 'awSem')}
-        <div class="form-row">
-            <div class="form-group"><label>Award/Position</label><input type="text" id="awPos-${id}" required></div>
-            <div class="form-group"><label>Awarded By</label><input type="text" id="awBy-${id}" required placeholder="Institution Name"></div>
+        <div class="form-grid">
+            ${renderSemesterDropdown(id, 'awSem')}
+            <div class="form-group"><label>Award/Position</label><input type="text" class="form-control" id="awPos-${id}"></div>
         </div>
-        <div class="form-group"><label>Date</label><input type="date" id="awDate-${id}" required></div>`;
+        <div class="form-grid">
+            <div class="form-group"><label>Awarded By</label><input type="text" class="form-control" id="awBy-${id}" placeholder="Institution/Organization Name"></div>
+            <div class="form-group"><label>Date</label><input type="date" class="form-control" id="awDate-${id}"></div>
+        </div>`;
 }
 
 // 4. Exams
 function renderExamBlock(id) {
     const options = EXAM_TYPES.map(e => `<option value="${e}">${e}</option>`).join('');
     return `
-        <div class="form-row">
-            <div class="form-group">
-                <label>Exam Name</label>
-                <select id="exName-${id}" required onchange="this.nextElementSibling.classList.toggle('hidden', this.value !== 'Other')">
+        <div class="form-grid">
+            <div class="form-group"><label>Exam Name</label>
+                <select id="exName-${id}" class="form-control" onchange="this.nextElementSibling.classList.toggle('hidden', this.value !== 'Other')">
                     <option value="" disabled selected>Select Exam</option>
                     ${options}
                 </select>
-                <input type="text" id="exNameOther-${id}" class="hidden" placeholder="Specify other exam" style="margin-top:10px">
+                <input type="text" id="exNameOther-${id}" class="form-control hidden mt-4" placeholder="Specify other exam">
             </div>
-            <div class="form-group"><label>Score (Optional)</label><input type="text" id="exScore-${id}"></div>
+            <div class="form-group"><label>Score (Optional)</label><input type="text" class="form-control" id="exScore-${id}" placeholder="Rank/Percentile"></div>
         </div>
-        <div class="form-row">
-            <div class="form-group"><label>Appeared</label><select id="exApp-${id}"><option value="Yes">Yes</option><option value="No">No</option></select></div>
-            <div class="form-group"><label>Qualified</label><select id="exQual-${id}"><option value="Yes">Yes</option><option value="No">No</option></select></div>
+        <div class="form-grid">
+            <div class="form-group"><label>Appeared</label><select id="exApp-${id}" class="form-control"><option value="Yes">Yes</option><option value="No">No</option></select></div>
+            <div class="form-group"><label>Qualified</label><select id="exQual-${id}" class="form-control"><option value="Yes">Yes</option><option value="No">No</option></select></div>
         </div>`;
 }
 
 // 5 & 6. Internship
 function renderInternshipBlock(id) {
     return `
-        ${renderSemesterDropdown(id, 'intSem')}
-        <div class="form-group"><label>Company Name</label><input type="text" id="intComp-${id}" required></div>
-        <div class="form-row">
-            <div class="form-group"><label>Period From</label><input type="date" id="intFrom-${id}" required></div>
-            <div class="form-group"><label>Period To</label><input type="date" id="intTo-${id}" required></div>
+        <div class="form-grid">
+            ${renderSemesterDropdown(id, 'intSem')}
+            <div class="form-group"><label>Company Name</label><input type="text" class="form-control" id="intComp-${id}"></div>
         </div>
-        <div class="form-group"><label>Area of training / project title</label><input type="text" id="intProj-${id}" required></div>`;
+        <div class="form-grid">
+            <div class="form-group"><label>Period From</label><input type="date" class="form-control" id="intFrom-${id}"></div>
+            <div class="form-group"><label>Period To</label><input type="date" class="form-control" id="intTo-${id}"></div>
+        </div>
+        <div class="form-group"><label>Title / Deliverables</label><input type="text" class="form-control" id="intProj-${id}" placeholder="Area of training or project title"></div>`;
 }
 
 // 7. Placement
 function renderPlacementBlock(id) {
     return `
-        ${renderSemesterDropdown(id, 'plSem')}
-        <div class="form-row">
-            <div class="form-group"><label>Company Name</label><input type="text" id="plComp-${id}" required></div>
-            <div class="form-group"><label>Role</label><input type="text" id="plRole-${id}" required></div>
+        <div class="form-grid">
+            ${renderSemesterDropdown(id, 'plSem')}
+            <div class="form-group"><label>Company Name</label><input type="text" class="form-control" id="plComp-${id}"></div>
         </div>
-        <div class="form-group"><label>Pay Package (LPA)</label><input type="number" id="plPack-${id}" required step="0.1"></div>`;
+        <div class="form-grid">
+            <div class="form-group"><label>Assigned Role</label><input type="text" class="form-control" id="plRole-${id}" placeholder="e.g. Graduate Engineer Trainee"></div>
+            <div class="form-group"><label>Pay Package (LPA)</label><input type="number" class="form-control" id="plPack-${id}" step="0.1"></div>
+        </div>`;
 }
 
 // 8. Higher Studies
 function renderHigherStudiesBlock(id) {
     return `
-        <div class="form-row">
-            <div class="form-group"><label>Institution Name</label><input type="text" id="hsInst-${id}" required></div>
-            <div class="form-group"><label>Programme Name</label><input type="text" id="hsProg-${id}" required></div>
+        <div class="form-grid">
+            <div class="form-group"><label>Institution Name</label><input type="text" class="form-control" id="hsInst-${id}"></div>
+            <div class="form-group"><label>Programme Name</label><input type="text" class="form-control" id="hsProg-${id}" placeholder="e.g. M.S. in Data Science"></div>
         </div>`;
 }
 
 // 9. Published Papers
 function renderPublishedPaperBlock(id) {
     return `
-        ${renderSemesterDropdown(id, 'ppSem')}
-        <div class="form-row">
-            <div class="form-group"><label>Guide Name</label><input type="text" id="ppGuide-${id}" required></div>
-            <div class="form-group"><label>Title of Paper</label><input type="text" id="ppTitle-${id}" required></div>
+        <div class="form-grid">
+            ${renderSemesterDropdown(id, 'ppSem')}
+            <div class="form-group"><label>Guide Name</label><input type="text" class="form-control" id="ppGuide-${id}"></div>
         </div>
-        <div class="form-row">
-            <div class="form-group"><label>Journal / Conference Name</label><input type="text" id="ppConf-${id}" required></div>
-            <div class="form-group">
-                <label>Type</label>
-                <select id="ppType-${id}" required><option value="Journal">Journal</option><option value="Conference">Conference</option></select>
-            </div>
+        <div class="form-group"><label>Title of Paper</label><input type="text" class="form-control" id="ppTitle-${id}"></div>
+        <div class="form-grid">
+            <div class="form-group"><label>Journal / Forum</label><input type="text" class="form-control" id="ppConf-${id}" placeholder="Venue name"></div>
+            <div class="form-group"><label>Type</label><select id="ppType-${id}" class="form-control"><option value="Journal">Journal</option><option value="Conference">Conference</option></select></div>
         </div>
-        <div class="form-row">
-            <div class="form-group"><label>Level</label><select id="ppLevel-${id}"><option value="National">National</option><option value="International">International</option></select></div>
-            <div class="form-group"><label>Month/Year</label><input type="text" id="ppDate-${id}" placeholder="MM/YYYY" required></div>
+        <div class="form-grid">
+            <div class="form-group"><label>Level</label><select id="ppLevel-${id}" class="form-control"><option value="National">National</option><option value="International">International</option></select></div>
+            <div class="form-group"><label>Date (MM/YYYY)</label><input type="text" class="form-control" id="ppDate-${id}" placeholder="04/2026"></div>
         </div>
-        <div class="form-row">
-            <div class="form-group"><label>ISBN/ISSN</label><input type="text" id="ppIsbn-${id}"></div>
-            <div class="form-group"><label>DOI / Link</label><input type="text" id="ppDoi-${id}"></div>
+        <div class="form-grid">
+            <div class="form-group"><label>ISBN/ISSN</label><input type="text" class="form-control" id="ppIsbn-${id}"></div>
+            <div class="form-group"><label>DOI / Reference Link</label><input type="text" class="form-control" id="ppDoi-${id}"></div>
         </div>`;
 }
 
 function handleFiles(files, infoEl, input) {
     let size = 0; for(let f of files) size += f.size;
-    if (size > 5*1024*1024) { alert("Size > 5MB"); input.value=""; infoEl.textContent=""; return; }
-    infoEl.textContent = `${files.length} selected (${(size/1024/1024).toFixed(2)}MB)`;
+    if (size > 5*1024*1024) { alert("Total file size exceeds 5MB limit."); input.value=""; infoEl.textContent=""; return; }
+    infoEl.textContent = `${files.length} file(s) selected (${(size/1024/1024).toFixed(2)}MB)`;
 }
 
 function initFormSubmission() {
-    document.getElementById('mainForm').addEventListener('submit', async (e) => {
+    const form = document.getElementById('mainForm');
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        
+        // Comprehensive Manual Validation
+        const validation = validateAllData();
+        if (!validation.success) {
+            switchTab(validation.tab);
+            const target = document.getElementById(validation.field);
+            if (target) {
+                target.classList.add('error-pulse');
+                setTimeout(() => target.classList.remove('error-pulse'), 2000);
+                target.focus();
+                alert(`Please fill the required field: ${validation.label}`);
+            }
+            return;
+        }
+
         const loader = document.getElementById('loadingOverlay');
+        const statusEl = document.getElementById('saveStatus');
+        
         loader.classList.remove('hidden');
+        statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+        
         try {
             const payload = await collectAllData();
-            console.log("Submitting Payload:", payload);
+            console.log("Proceeding with payload:", payload);
             
-            // Using a standard POST. If CORS is blocked, it will still try as 'no-cors'
             const response = await fetch(SCRIPT_URL, { 
                 method: 'POST', 
                 body: JSON.stringify(payload)
             }).catch(err => {
-                console.warn("Retrying with no-cors due to potential CORS block...");
-                return fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
+                // Fallback for CORS issues in some environments
+                return fetch(SCRIPT_URL, { 
+                    method: 'POST', 
+                    body: JSON.stringify(payload), 
+                    mode: 'no-cors' 
+                });
             });
 
             console.log("Server Response Received");
+            statusEl.innerHTML = '<i class="fas fa-check-circle" style="color: var(--success)"></i> Submitted';
+            
             setTimeout(() => { 
                 loader.classList.add('hidden'); 
                 document.getElementById('successOverlay').classList.remove('hidden'); 
-            }, 1500);
+            }, 1000);
         } catch (err) { 
             console.error("Submission error:", err);
-            alert("Submission failed. Check console for details."); 
+            statusEl.innerHTML = '<i class="fas fa-times-circle" style="color: var(--error)"></i> Failed';
+            alert("Submission failed. Please check your internet connection."); 
             loader.classList.add('hidden'); 
         }
     });
 }
+
+const val = id => document.getElementById(id)?.value || "";
 
 async function collectAllData() {
     const sel = document.getElementById('studentSelect').value;
@@ -382,16 +472,39 @@ async function collectAllData() {
     };
 }
 
-const val = id => document.getElementById(id)?.value || "";
-
 async function collectSection(key, mapFn) {
     const blocks = Array.from(document.querySelectorAll(`.entry-card[data-section="${key}"]`));
     const data = [];
     for (let b of blocks) {
         const id = b.dataset.entryId;
         const entry = mapFn(id);
+        
+        // Define which keys denote actual content vs default dropdowns
+        const meaningfulKeys = Object.keys(entry).filter(k => 
+             !['appeared', 'qualified', 'type', 'level', 'semester'].includes(k)
+        );
+        
+        // Check if all meaningful fields are empty, 'na', 'nil', '-', etc.
+        const isEntryEmpty = meaningfulKeys.every(k => {
+            const v = entry[k];
+            if (!v) return true;
+            const str = String(v).trim().toLowerCase();
+            return str === '' || str === 'na' || str === 'n/a' || str === 'nil' || str === 'none' || str === '-';
+        });
+
+        // Also ensure no files were uploaded
+        let hasFiles = false;
+        for (let input of b.querySelectorAll('.file-input-hidden')) {
+            if (input.files.length > 0) hasFiles = true;
+        }
+
+        // If the section is practically empty, do not send it to the backend
+        if (isEntryEmpty && !hasFiles) {
+            continue; 
+        }
+
         const files = [];
-        for (let input of b.querySelectorAll('.file-input')) {
+        for (let input of b.querySelectorAll('.file-input-hidden')) {
             const label = input.dataset.label ? `${input.dataset.label}_` : "";
             for (let f of input.files) {
                 files.push({ 
@@ -404,6 +517,17 @@ async function collectSection(key, mapFn) {
         data.push({...entry, files});
     }
     return data;
+}
+
+function validateAllData() {
+    // 1. Mandatory Profile Validation
+    if (!val('studentSelect')) return { success: false, tab: 'studentProfile', field: 'studentSelect', label: 'Roll Number' };
+    if (!val('personalEmail')) return { success: false, tab: 'studentProfile', field: 'personalEmail', label: 'Personal Email' };
+    if (!val('studentPhone')) return { success: false, tab: 'studentProfile', field: 'studentPhone', label: 'Contact Number' };
+    if (!val('studentAddress')) return { success: false, tab: 'studentProfile', field: 'studentAddress', label: 'Current Address' };
+
+    // All other sections are now optional!
+    return { success: true };
 }
 
 const toBase64 = file => new Promise((resolve, reject) => {

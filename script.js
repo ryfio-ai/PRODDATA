@@ -23,7 +23,7 @@ const students = [
     "23P437 - RANJITH KUMAR K", "23P438 - AHAMED YASHICK M", "23P439 - KARTHIK A S"
 ];
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyc8JJHZJBjyz0_oPL6fFu53ZBnRuH7eJ6DwtiODmg73BDWnEGZlhnIMfDC_Rsjfu3E/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxY5vgKJF5t3u5IpzLIzYGjE4lEXJdqCp648o5Hvr1jiJyWnd25a80611uOxdQ2gqpO/exec";
 
 const ACTIVITY_TYPES = [
     "NCC", "General Quiz", "Marketing", "Engineering Quiz", "How Stuffs Works", 
@@ -46,7 +46,8 @@ const TAB_TITLES = {
     personalInternships: "Personal Internships",
     placementOffers: "Placement Offers",
     higherStudies: "Higher Studies",
-    publishedPapers: "Research Papers & Conferences"
+    publishedPapers: "Research Papers & Conferences",
+    scholarships: "Scholarships"
 };
 
 const sectionState = {
@@ -58,7 +59,8 @@ const sectionState = {
     personalInternships: { count: 0 },
     placementOffers: { count: 0 },
     higherStudies: { count: 0 },
-    publishedPapers: { count: 0 }
+    publishedPapers: { count: 0 },
+    scholarships: { count: 0 }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -75,6 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initDynamicSection('placementOffers', renderPlacementBlock, 'addPlacementOffersBtn', 'placementOffersContainer');
     initDynamicSection('higherStudies', renderHigherStudiesBlock, 'addHigherStudiesBtn', 'higherStudiesContainer');
     initDynamicSection('publishedPapers', renderPublishedPaperBlock, 'addPublishedPapersBtn', 'publishedPapersContainer');
+    initDynamicSection('scholarships', renderScholarshipBlock, 'addScholarshipsBtn', 'scholarshipsContainer');
 
     initFormSubmission();
 });
@@ -222,28 +225,15 @@ function renderProofUpload(id) {
 
 function renderInternshipProofUpload(id) {
     return `
-        <div class="form-grid mt-8">
-            <div class="form-group">
-                <label>Offer Letter</label>
-                <div class="file-drop-zone">
-                    <input type="file" class="file-input-hidden" data-label="Offer" accept=".pdf,.jpg,.jpeg,.png">
-                    <div class="file-label">
-                        <i class="fas fa-file-contract"></i><br>
-                        <span>Attach Offer</span>
-                    </div>
-                    <div class="file-info-text"></div>
+        <div class="form-group mt-8">
+            <label>Official Soft Copy Internship Report</label>
+            <div class="file-drop-zone">
+                <input type="file" class="file-input-hidden" data-label="Report" accept=".pdf,.jpg,.jpeg,.png">
+                <div class="file-label">
+                    <i class="fas fa-file-contract"></i><br>
+                    <span>Attach Official Report</span>
                 </div>
-            </div>
-            <div class="form-group">
-                <label>Completion Certificate</label>
-                <div class="file-drop-zone">
-                    <input type="file" class="file-input-hidden" data-label="Certificate" accept=".pdf,.jpg,.jpeg,.png">
-                    <div class="file-label">
-                        <i class="fas fa-certificate"></i><br>
-                        <span>Attach Certificate</span>
-                    </div>
-                    <div class="file-info-text"></div>
-                </div>
+                <div class="file-info-text"></div>
             </div>
         </div>`;
 }
@@ -385,6 +375,20 @@ function renderPublishedPaperBlock(id) {
         </div>`;
 }
 
+// 10. Scholarships
+function renderScholarshipBlock(id) {
+    return `
+        <div class="form-grid">
+            ${renderSemesterDropdown(id, 'schSem')}
+            <div class="form-group"><label>Scholarship Name</label><input type="text" class="form-control" id="schName-${id}"></div>
+        </div>
+        <div class="form-group"><label>Given By</label><input type="text" class="form-control" id="schBy-${id}" placeholder="Institution/Organization Name"></div>
+        <div class="form-grid">
+            <div class="form-group"><label>Period of Scholarship</label><input type="text" class="form-control" id="schPeriod-${id}" placeholder="e.g. 2023-2024"></div>
+            <div class="form-group"><label>Amount</label><input type="number" class="form-control" id="schAmount-${id}"></div>
+        </div>`;
+}
+
 function handleFiles(files, infoEl, input) {
     let size = 0; for(let f of files) size += f.size;
     if (size > 5*1024*1024) { alert("Total file size exceeds 5MB limit."); input.value=""; infoEl.textContent=""; return; }
@@ -419,6 +423,22 @@ function initFormSubmission() {
         try {
             const payload = await collectAllData();
             console.log("Proceeding with payload:", payload);
+
+            // Mandatory Proof Validation
+            const sectionsToCheck = ['visitsAbroad', 'activities', 'awards', 'exams', 'officialInternships', 'personalInternships', 'placementOffers', 'higherStudies', 'publishedPapers', 'scholarships'];
+            for (const sec of sectionsToCheck) {
+                if (payload[sec] && payload[sec].length > 0) {
+                    for (const entry of payload[sec]) {
+                        if (!entry.files || entry.files.length === 0) {
+                            switchTab(sec);
+                            alert(`Proof is mandatory. Please upload supporting documentation for your entry in ${TAB_TITLES[sec]}.`);
+                            loader.classList.add('hidden');
+                            statusEl.innerHTML = '<i class="fas fa-circle-check"></i> Ready';
+                            return; // Stop submission
+                        }
+                    }
+                }
+            }
             
             const response = await fetch(SCRIPT_URL, { 
                 method: 'POST', 
@@ -468,7 +488,8 @@ async function collectAllData() {
         personalInternships: await collectSection('personalInternships', id => ({ semester: val(`intSem-${id}`), company: val(`intComp-${id}`), from: val(`intFrom-${id}`), to: val(`intTo-${id}`), project: val(`intProj-${id}`) })),
         placementOffers: await collectSection('placementOffers', id => ({ semester: val(`plSem-${id}`), company: val(`plComp-${id}`), role: val(`plRole-${id}`), package: val(`plPack-${id}`) })),
         higherStudies: await collectSection('higherStudies', id => ({ institution: val(`hsInst-${id}`), programme: val(`hsProg-${id}`) })),
-        publishedPapers: await collectSection('publishedPapers', id => ({ semester: val(`ppSem-${id}`), guide: val(`ppGuide-${id}`), title: val(`ppTitle-${id}`), conf: val(`ppConf-${id}`), type: val(`ppType-${id}`), level: val(`ppLevel-${id}`), date: val(`ppDate-${id}`), isbn: val(`ppIsbn-${id}`), doi: val(`ppDoi-${id}`) }))
+        publishedPapers: await collectSection('publishedPapers', id => ({ semester: val(`ppSem-${id}`), guide: val(`ppGuide-${id}`), title: val(`ppTitle-${id}`), conf: val(`ppConf-${id}`), type: val(`ppType-${id}`), level: val(`ppLevel-${id}`), date: val(`ppDate-${id}`), isbn: val(`ppIsbn-${id}`), doi: val(`ppDoi-${id}`) })),
+        scholarships: await collectSection('scholarships', id => ({ semester: val(`schSem-${id}`), name: val(`schName-${id}`), by: val(`schBy-${id}`), period: val(`schPeriod-${id}`), amount: val(`schAmount-${id}`) }))
     };
 }
 

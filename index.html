@@ -50,6 +50,9 @@
                 <button type="button" class="nav-item" data-tab="publishedPapers">
                     <i class="fas fa-file-invoice"></i> 9. Research Paper
                 </button>
+                <button type="button" class="nav-item" data-tab="scholarships">
+                    <i class="fas fa-hand-holding-dollar"></i> 10. Scholarship
+                </button>
             </nav>
 
             <div class="sidebar-footer">
@@ -257,6 +260,22 @@
                             
                             <div class="step-nav-buttons mt-8" style="display: flex; justify-content: space-between;">
                                 <button type="button" class="secondary-btn prev-btn" data-prev="higherStudies"><i class="fas fa-arrow-left"></i> Previous</button>
+                                <button type="button" class="primary-btn next-btn" data-next="scholarships">Next: Scholarships <i class="fas fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 10: Scholarships -->
+                    <div id="scholarshipsTab" class="tab-content hidden">
+                        <div class="card">
+                            <div class="section-header">
+                                <div class="form-section-title"><i class="fas fa-hand-holding-dollar"></i> Scholarships</div>
+                                <button type="button" id="addScholarshipsBtn" class="secondary-btn"><i class="fas fa-plus"></i> Add</button>
+                            </div>
+                            <div id="scholarshipsContainer"></div>
+                            
+                            <div class="step-nav-buttons mt-8" style="display: flex; justify-content: space-between;">
+                                <button type="button" class="secondary-btn prev-btn" data-prev="publishedPapers"><i class="fas fa-arrow-left"></i> Previous</button>
                                 <button type="submit" id="submitBtn" class="primary-btn">
                                     <i class="fas fa-cloud-upload-alt"></i> Finalize & Submit All Records
                                 </button>

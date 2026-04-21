@@ -166,6 +166,15 @@ function getSectionsConfig(student, timestamp) {
       folder: "Research Papers",
       title: e => e.title,
       sem: e => e.semester
+    },
+    {
+      key: "scholarships",
+      sheetName: "Scholarships",
+      headers: ["Timestamp", "Roll No", "Name", "Personal Email", "Phone No", "Address", "Semester", "Scholarship Name", "Given By", "Period", "Amount", "Drive Link"],
+      builder: (e, p) => [ts, std.rollNo, std.name, std.personalEmail, std.phone, std.address, e.semester, e.name, e.by, e.period, e.amount, p],
+      folder: "Scholarships",
+      title: e => e.name,
+      sem: e => e.semester
     }
   ];
 }

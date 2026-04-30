@@ -6,10 +6,10 @@ This manual provides step-by-step instructions for students to navigate the **Se
 ---
 
 ### **1. OVERVIEW**
-The portal has been redesigned into a **guided 10-step wizard**. Instead of free-form tabs, you will follow a logical sequence to ensure all relevant professional and academic data is captured accurately.
+The portal has been redesigned into a **guided 11-step wizard**. Instead of free-form tabs, you will follow a logical sequence to ensure all relevant professional and academic data is captured accurately.
 
 **Mandatory Requirement:** 
-Only **Step 0: Student Profile** is mandatory. All other sections (1 through 9) are optional—you should only add entries to them if you have relevant activities to report.
+Only **Step 0: Student Profile** is mandatory. All other sections (1 through 10) are optional—you should only add entries to them if you have relevant activities to report.
 
 ---
 
@@ -21,7 +21,7 @@ Only **Step 0: Student Profile** is mandatory. All other sections (1 through 9) 
 
 ---
 
-### **3. THE 10-STEP WORKFLOW**
+### **3. THE 11-STEP WORKFLOW**
 You will progress through the following sections in order:
 - **0. Student Profile** (Identity & Contact)
 - **1. Visits Abroad** (International academic visits)
@@ -33,11 +33,12 @@ You will progress through the following sections in order:
 - **7. Placement Offers** (Job offers and LPA details)
 - **8. Higher Studies** (Programme and Institution)
 - **9. Research Paper** (Journal/Conference publications)
+- **10. Scholarships** (Financial aid, endowments, etc.)
 
 ---
 
 ### **4. ADDING & REMOVING ENTRIES**
-In any section from 1 to 9:
+In any section from 1 to 10:
 1.  **Add Entry**: Click the **"+ Add"** button in the top right of the section card to create a record block.
 2.  **Fill Details**: Provide the requested information (Semesters, Dates, Names, etc.).
 3.  **Remove**: If you add a block by mistake, click the **Red X** button to delete it.
@@ -54,7 +55,7 @@ Supporting documentation is required for every entry:
 ---
 
 ### **6. FINAL SUBMISSION**
-1.  Navigate to the final step (**9. Research Paper**).
+1.  Navigate to the final step (**10. Scholarships**).
 2.  Review all your entries using the **"Previous"** and **"Next"** buttons to ensure accuracy.
 3.  Click the **"Finalize & Submit All Records"** button.
 4.  **Wait**: A progress screen will appear. Once you see the **"Submission Successful"** overlay, your data is securely stored in the department registry.

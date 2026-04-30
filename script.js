@@ -82,24 +82,13 @@ document.addEventListener('DOMContentLoaded', () => {
     initFormSubmission();
 });
 
-async function initDynamicDropdown() {
+function initDynamicDropdown() {
     const studentSelect = document.getElementById('studentSelect');
     const studentEmail = document.getElementById('studentEmail');
     const submitBtn = document.getElementById('submitBtn');
     if (submitBtn) submitBtn.disabled = true;
 
-    let submittedRolls = [];
-    try {
-        const response = await fetch(`${SCRIPT_URL}?action=getSubmissions`);
-        const result = await response.json();
-        if (result.success) submittedRolls = result.data;
-    } catch (e) {
-        console.error("Could not fetch submissions", e);
-    }
-
-    const availableStudents = students.filter(s => !submittedRolls.includes(s.split(' - ')[0]));
-
-    availableStudents.forEach(student => {
+    students.forEach(student => {
         const option = document.createElement('option');
         option.value = student;
         option.textContent = student;
